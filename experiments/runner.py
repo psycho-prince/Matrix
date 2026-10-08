@@ -6,8 +6,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
+import csv
 
-# Add the project root to the path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from gal.agents.agent import Agent
@@ -24,26 +24,21 @@ def run_single_simulation(mode: str, num_agents: int, generations: int, seed: in
     for gen in range(1, generations + 1):
         current_generation = [Agent(identity=f"GAL-GEN{gen}-{i:03d}", generation=gen, random_seed=seed+i) for i in range(num_agents)]
         
-        # Phase 1: Inheritance
         if previous_generation:
             for i, child in enumerate(current_generation):
                 parent = previous_generation[i % len(previous_generation)]
                 child.parents.append(parent.identity)
                 parent.successor = child.identity
-                
                 child.inherit(parent, mode)
         
-        # Phase 2: Lifecycle
         for agent in current_generation:
             agent.develop()
             for _ in range(5): 
                 agent.learn_independently(world)
                 agent.work(world, num_tasks=10)
                 
-        # Phase 3: Metrics
         gen_success = np.mean([a.task_success_rate for a in current_generation])
         success_rates.append(gen_success)
-        
         previous_generation = current_generation
         
     return success_rates
@@ -51,14 +46,25 @@ def run_single_simulation(mode: str, num_agents: int, generations: int, seed: in
 def run_experiment(mode: str, num_agents: int, generations: int, num_seeds: int, output_dir: Path):
     print(f"Running Experiment - Mode: {mode}")
     all_results = []
+    
+    raw_dir = output_dir.parent / "raw"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    
     for seed in range(num_seeds):
         res = run_single_simulation(mode, num_agents, generations, seed)
         all_results.append(res)
         
-    all_results = np.array(all_results) # Shape: (num_seeds, generations)
+        # Save raw seed data
+        with open(raw_dir / f"mode_{mode}_seed_{seed:03d}.json", "w") as f:
+            json.dump({
+                "mode": mode,
+                "seed": seed,
+                "generations": generations,
+                "task_success_rates": res
+            }, f, indent=2)
+        
+    all_results = np.array(all_results)
     mean_results = np.mean(all_results, axis=0)
-    
-    # 95% Confidence Intervals
     se = stats.sem(all_results, axis=0)
     ci = se * stats.t.ppf((1 + 0.95) / 2., num_seeds-1)
     
@@ -67,17 +73,22 @@ def run_experiment(mode: str, num_agents: int, generations: int, num_seeds: int,
     
     return all_results, mean_results, ci
 
-def plot_results(results_summary, generations, output_file):
+def save_summary_csv(results_summary, generations, output_dir):
+    csv_path = output_dir / "summary.csv"
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        header = ["Mode"] + [f"Gen_{i}" for i in range(1, generations + 1)]
+        writer.writerow(header)
+        for mode, data in results_summary.items():
+            mean = data['mean']
+            writer.writerow([mode] + [f"{m:.4f}" for m in mean])
+
+def plot_results(results_summary, generations, figures_dir):
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    
     plt.figure(figsize=(12, 7))
     x = np.arange(1, generations + 1)
-    
-    colors = {
-        'A': 'red', 
-        'B-copy': 'blue', 
-        'C-full': 'green',
-        'C-no-memory': 'orange',
-        'C-low-effort': 'purple'
-    }
+    colors = {'A': 'red', 'B-copy': 'blue', 'C-full': 'green', 'C-no-memory': 'orange', 'C-low-effort': 'purple'}
     
     for mode, data in results_summary.items():
         mean, ci = data['mean'], data['ci']
@@ -91,54 +102,69 @@ def plot_results(results_summary, generations, output_file):
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.tight_layout()
-    plt.savefig(output_file)
-    print(f"Saved plot to {output_file}")
+    plt.savefig(figures_dir / "generation_trajectory.png")
+    
+    # Final generation comparison bar chart
+    plt.figure(figsize=(10, 6))
+    modes = list(results_summary.keys())
+    means = [results_summary[m]['mean'][-1] for m in modes]
+    cis = [results_summary[m]['ci'][-1] for m in modes]
+    plt.bar(modes, means, yerr=cis, color=[colors[m] for m in modes], capsize=5)
+    plt.title('Final Generation (Gen 10) Task Success Rate Comparison')
+    plt.ylabel('Task Success Rate')
+    plt.tight_layout()
+    plt.savefig(figures_dir / "final_generation_comparison.png")
 
-def run_stats(results_summary):
-    print("\n--- Statistical Analysis (Gen 10) ---")
+def run_stats(results_summary, stats_dir):
+    stats_dir.mkdir(parents=True, exist_ok=True)
+    
     c_full = results_summary['C-full']['raw'][:, -1]
     b_copy = results_summary['B-copy']['raw'][:, -1]
     
-    # Welch's t-test
-    t_stat, p_val = stats.ttest_ind(c_full, b_copy, equal_var=False)
+    # Paired t-test since seeds match (environment is identical per seed across modes)
+    t_stat, p_val = stats.ttest_rel(c_full, b_copy)
     
-    # Cohen's d effect size
     mean_c = np.mean(c_full)
     mean_b = np.mean(b_copy)
     pooled_std = np.sqrt((np.std(c_full, ddof=1)**2 + np.std(b_copy, ddof=1)**2) / 2)
     cohens_d = (mean_c - mean_b) / pooled_std
     
-    print(f"C-full vs B-copy:")
-    print(f"  Welch's t-statistic: {t_stat:.4f}")
-    print(f"  p-value: {p_val:.4e}")
-    print(f"  Cohen's d: {cohens_d:.4f}")
+    report = {
+        "comparison": "C-full vs B-copy",
+        "test": "Paired t-test",
+        "t_statistic": float(t_stat),
+        "p_value": float(p_val),
+        "cohens_d": float(cohens_d),
+        "significant_at_05": bool(p_val < 0.05),
+        "mean_c_full": float(mean_c),
+        "mean_b_copy": float(mean_b)
+    }
     
-    if p_val < 0.05:
-        print("  => Statistically Significant Difference at p < 0.05")
-    else:
-        print("  => NO Statistically Significant Difference at p < 0.05")
+    with open(stats_dir / "statistical_report.json", "w") as f:
+        json.dump(report, f, indent=4)
+        
+    print(f"Paired t-test C-full vs B-copy: t={t_stat:.4f}, p={p_val:.2e}, d={cohens_d:.4f}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run GAL v0.2 Experiments")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--agents", type=int, default=100)
     parser.add_argument("--generations", type=int, default=10)
     parser.add_argument("--seeds", type=int, default=30)
-    parser.add_argument("--outdir", type=str, default="results/processed")
+    parser.add_argument("--outdir", type=str, default="results")
     args = parser.parse_args()
     
-    out_path = Path(args.outdir)
-    results_summary = {}
+    base_out = Path(args.outdir)
+    processed_out = base_out / "processed"
     
+    results_summary = {}
     modes = ['A', 'B-copy', 'C-full', 'C-no-memory', 'C-low-effort']
     
     for mode in modes:
-        raw, mean, ci = run_experiment(mode, args.agents, args.generations, args.seeds, out_path)
+        raw, mean, ci = run_experiment(mode, args.agents, args.generations, args.seeds, processed_out)
         results_summary[mode] = {'raw': raw, 'mean': mean, 'ci': ci}
         
-        print(f"  Final Gen {args.generations} Mean Success Rate: {mean[-1]:.2%} ± {ci[-1]:.2%} (95% CI)")
-        
-    plot_file = Path("results/figures/experiment_0.2_results.png")
-    plot_file.parent.mkdir(parents=True, exist_ok=True)
-    plot_results(results_summary, args.generations, plot_file)
+    save_summary_csv(results_summary, args.generations, processed_out)
+    plot_results(results_summary, args.generations, base_out / "figures")
+    run_stats(results_summary, base_out / "statistics")
     
-    run_stats(results_summary)
+    print("\nExperiment complete. Archive generated.")
