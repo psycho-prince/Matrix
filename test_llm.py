@@ -3,7 +3,7 @@ from google import genai
 from google.genai import types
 
 def test_gemini():
-    api_key = "AQ.Ab8RN6JRqtEKDKb2Gr85wU9RpKvBfom_vpiyfqdNcKmdbuwa6g"
+    api_key = os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
     client = genai.Client(api_key=api_key)
     
     candidate_models = [
