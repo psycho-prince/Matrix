@@ -4,8 +4,8 @@ from gal.environment.world import Environment, Task
 
 class Agent:
     def __init__(self, identity: str, generation: int, random_seed: int = None):
-        if random_seed is not None:
-            random.seed(random_seed)
+        # ISOLATED RNG INSTANCE to prevent cross-condition confounding
+        self.rng = random.Random(random_seed) if random_seed is not None else random.Random()
             
         self.identity = identity
         self.generation = generation
@@ -23,7 +23,6 @@ class Agent:
         }
         
         self.knowledge_concepts = set()
-        
         self.parents: List[str] = []
         self.successor: Optional[str] = None
         
@@ -36,80 +35,82 @@ class Agent:
 
     def learn_independently(self, environment: Environment):
         if self.development_stage in ["child", "adult"]:
-            num_new_concepts = random.randint(5, 20)
+            num_new_concepts = self.rng.randint(5, 20)
             for _ in range(num_new_concepts):
-                self.knowledge_concepts.add(f"concept_{random.randint(1, 10000)}")
+                self.knowledge_concepts.add(f"concept_{self.rng.randint(1, 10000)}")
             
-            skill_to_improve = random.choice(list(self.skills.keys()))
-            self.skills[skill_to_improve] = min(1.0, self.skills[skill_to_improve] + random.uniform(0.01, 0.1))
+            skill_to_improve = self.rng.choice(list(self.skills.keys()))
+            self.skills[skill_to_improve] = min(1.0, self.skills[skill_to_improve] + self.rng.uniform(0.01, 0.1))
             self.age += 1
 
     def work(self, environment: Environment, num_tasks: int = 5):
+        # We must also ensure the environment's task selection uses this agent's isolated RNG
+        # to ensure perfect synchronization across ablation conditions.
         for _ in range(num_tasks):
-            task = environment.get_random_task()
+            task = environment.get_random_task(self.rng)
             self.tasks_attempted += 1
             
             skill_level = self.skills.get(task.required_skill, 0.0)
-            if task.attempt(skill_level):
+            if task.attempt(skill_level, self.rng):
                 self.tasks_succeeded += 1
                 self.skills[task.required_skill] = min(1.0, self.skills[task.required_skill] + 0.02)
         self.age += 5
 
     def inherit(self, parent_agent, mode: str):
         """
-        Handle inheritance based on the specific experimental ablation mode.
-        Ensures strict time/resource equivalence across all modes.
-        Modes:
-        - A: No inheritance
-        - B-copy: Direct memory dump
-        - C-full: Active teaching (skills and concepts)
-        - C-no-memory: Active teaching (skills only)
-        - C-low-effort: Active teaching (low transfer rate)
+        Fixed inheritance mechanism.
         """
         if mode == 'A':
-            pass # Independent learning only
+            pass 
             
         elif mode == 'B-copy':
-            # Direct database dump
             self.knowledge_concepts = set(parent_agent.knowledge_concepts)
             for skill, level in parent_agent.skills.items():
                 self.skills[skill] = level * 0.9
                 
         elif mode == 'C-full':
-            # Full active teaching
-            taught_concepts = random.sample(
-                list(parent_agent.knowledge_concepts), 
-                k=int(len(parent_agent.knowledge_concepts) * random.uniform(0.5, 0.8))
-            ) if parent_agent.knowledge_concepts else []
-            self.knowledge_concepts.update(taught_concepts)
-            
+            # TRUE TEACHING MECHANISM
+            self.knowledge_concepts.update(parent_agent.knowledge_concepts)
             for skill, parent_level in parent_agent.skills.items():
                 if parent_level > 0:
-                    transfer_rate = random.uniform(0.6, 0.95)
-                    self.skills[skill] = max(self.skills[skill], parent_level * transfer_rate)
+                    child_initial = self.rng.uniform(0, 0.2)
+                    concept_bonus = 0.1 if len(parent_agent.knowledge_concepts) > 0 else 0.0
+                    learning_iterations = 3
+                    current_level = child_initial
+                    for _ in range(learning_iterations):
+                        error = parent_level - current_level
+                        correction = error * self.rng.uniform(0.3, 0.7) + concept_bonus
+                        current_level += correction
+                    self.skills[skill] = min(1.0, max(self.skills[skill], current_level))
                     
         elif mode == 'C-no-memory':
-            # Teaching skills, but not abstract concepts
             for skill, parent_level in parent_agent.skills.items():
                 if parent_level > 0:
-                    transfer_rate = random.uniform(0.6, 0.95)
-                    self.skills[skill] = max(self.skills[skill], parent_level * transfer_rate)
+                    child_initial = self.rng.uniform(0, 0.2)
+                    concept_bonus = 0.0 # No concepts transferred
+                    learning_iterations = 3
+                    current_level = child_initial
+                    for _ in range(learning_iterations):
+                        error = parent_level - current_level
+                        correction = error * self.rng.uniform(0.3, 0.7) + concept_bonus
+                        current_level += correction
+                    self.skills[skill] = min(1.0, max(self.skills[skill], current_level))
                     
         elif mode == 'C-low-effort':
-            # Teaching with low effort
-            taught_concepts = random.sample(
-                list(parent_agent.knowledge_concepts), 
-                k=int(len(parent_agent.knowledge_concepts) * random.uniform(0.2, 0.4))
-            ) if parent_agent.knowledge_concepts else []
-            self.knowledge_concepts.update(taught_concepts)
-            
+            self.knowledge_concepts.update(parent_agent.knowledge_concepts)
             for skill, parent_level in parent_agent.skills.items():
                 if parent_level > 0:
-                    transfer_rate = random.uniform(0.2, 0.5) # Lower transfer rate
-                    self.skills[skill] = max(self.skills[skill], parent_level * transfer_rate)
+                    child_initial = self.rng.uniform(0, 0.2)
+                    concept_bonus = 0.05
+                    learning_iterations = 1 # Low effort teaching
+                    current_level = child_initial
+                    for _ in range(learning_iterations):
+                        error = parent_level - current_level
+                        correction = error * self.rng.uniform(0.1, 0.4) + concept_bonus
+                        current_level += correction
+                    self.skills[skill] = min(1.0, max(self.skills[skill], current_level))
 
     @property
     def task_success_rate(self) -> float:
-        if self.tasks_attempted == 0:
-            return 0.0
+        if self.tasks_attempted == 0: return 0.0
         return self.tasks_succeeded / self.tasks_attempted

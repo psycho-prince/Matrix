@@ -3,7 +3,8 @@ import time
 from google import genai
 from google.genai import types
 
-API_KEY = "AQ.Ab8RN6JRqtEKDKb2Gr85wU9RpKvBfom_vpiyfqdNcKmdbuwa6g"
+import os
+API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
 MODEL = 'gemini-3.5-flash-lite'
 client = genai.Client(api_key=API_KEY)
 
