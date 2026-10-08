@@ -17,12 +17,12 @@ def run_single_simulation(mode: str, num_agents: int, generations: int, seed: in
     random.seed(seed)
     np.random.seed(seed)
     
-    world = Environment(random_seed=seed)
+    world = Environment()
     previous_generation = []
     success_rates = []
     
     for gen in range(1, generations + 1):
-        current_generation = [Agent(identity=f"GAL-GEN{gen}-{i:03d}", generation=gen, random_seed=seed+i) for i in range(num_agents)]
+        current_generation = [Agent(identity=f"GAL-GEN{gen}-{i:03d}", generation=gen, universe_seed=seed) for i in range(num_agents)]
         
         if previous_generation:
             for i, child in enumerate(current_generation):
@@ -121,20 +121,24 @@ def run_stats(results_summary, stats_dir):
     c_full = results_summary['C-full']['raw'][:, -1]
     b_copy = results_summary['B-copy']['raw'][:, -1]
     
-    # Paired t-test since seeds match (environment is identical per seed across modes)
+    # Paired t-test
     t_stat, p_val = stats.ttest_rel(c_full, b_copy)
+    
+    # Paired effect size (d_z)
+    differences = c_full - b_copy
+    mean_diff = np.mean(differences)
+    sd_diff = np.std(differences, ddof=1)
+    cohens_d_z = mean_diff / sd_diff if sd_diff > 0 else float('inf')
     
     mean_c = np.mean(c_full)
     mean_b = np.mean(b_copy)
-    pooled_std = np.sqrt((np.std(c_full, ddof=1)**2 + np.std(b_copy, ddof=1)**2) / 2)
-    cohens_d = (mean_c - mean_b) / pooled_std
     
     report = {
         "comparison": "C-full vs B-copy",
         "test": "Paired t-test",
         "t_statistic": float(t_stat),
         "p_value": float(p_val),
-        "cohens_d": float(cohens_d),
+        "cohens_d_z": float(cohens_d_z),
         "significant_at_05": bool(p_val < 0.05),
         "mean_c_full": float(mean_c),
         "mean_b_copy": float(mean_b)
@@ -143,7 +147,7 @@ def run_stats(results_summary, stats_dir):
     with open(stats_dir / "statistical_report.json", "w") as f:
         json.dump(report, f, indent=4)
         
-    print(f"Paired t-test C-full vs B-copy: t={t_stat:.4f}, p={p_val:.2e}, d={cohens_d:.4f}")
+    print(f"Paired t-test C-full vs B-copy: t={t_stat:.4f}, p={p_val:.2e}, d_z={cohens_d_z:.4f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

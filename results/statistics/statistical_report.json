@@ -1,10 +1,10 @@
 {
     "comparison": "C-full vs B-copy",
     "test": "Paired t-test",
-    "t_statistic": 392.48778283701085,
-    "p_value": 1.41144374399674e-55,
-    "cohens_d": 126.04097875198195,
+    "t_statistic": 26.11241379641711,
+    "p_value": 1.0699576535175745e-21,
+    "cohens_d_z": 4.7674526890689215,
     "significant_at_05": true,
-    "mean_c_full": 0.80602,
-    "mean_b_copy": 0.5135733333333334
+    "mean_c_full": 0.84798,
+    "mean_b_copy": 0.8325933333333333
 }
