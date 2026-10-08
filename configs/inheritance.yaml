@@ -1,0 +1,6 @@
+experiment_name: "exp_0.2_inheritance"
+mode: "B"
+num_agents: 100
+generations: 10
+num_seeds: 30
+output_dir: "results/processed"

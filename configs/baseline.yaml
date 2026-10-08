@@ -1,0 +1,6 @@
+experiment_name: "exp_0.2_baseline"
+mode: "A"
+num_agents: 100
+generations: 10
+num_seeds: 30
+output_dir: "results/processed"
