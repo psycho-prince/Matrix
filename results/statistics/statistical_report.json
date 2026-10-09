@@ -1,10 +1,22 @@
 {
-    "comparison": "C-full vs B-copy",
-    "test": "Paired t-test",
-    "t_statistic": 26.11241379641711,
-    "p_value": 1.0699576535175745e-21,
-    "cohens_d_z": 4.7674526890689215,
-    "significant_at_05": true,
-    "mean_c_full": 0.84798,
-    "mean_b_copy": 0.8325933333333333
+    "comparison_C_full_vs_B_perfect": {
+        "test": "Paired t-test",
+        "t_statistic": 921.1479815262271,
+        "p_value": 1.6438931863878233e-196,
+        "cohens_d_z": 92.11479815262271,
+        "significant_at_05": true,
+        "mean_c_full": 0.847282,
+        "mean_b_perfect": 0.041277999999999995,
+        "difference": 0.806004
+    },
+    "comparison_C_full_vs_B_copy": {
+        "test": "Paired t-test",
+        "t_statistic": -71.83018374150544,
+        "p_value": 3.2213782419649803e-87,
+        "cohens_d_z": -7.183018374150543,
+        "significant_at_05": true,
+        "mean_c_full": 0.847282,
+        "mean_b_copy": 0.884174,
+        "difference": -0.03689200000000001
+    }
 }

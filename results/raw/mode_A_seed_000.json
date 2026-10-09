@@ -2,6 +2,7 @@
   "mode": "A",
   "seed": 0,
   "generations": 10,
+  "num_agents": 100,
   "task_success_rates": [
     0.0332,
     0.0342,
