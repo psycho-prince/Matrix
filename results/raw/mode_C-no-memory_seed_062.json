@@ -1,8 +1,8 @@
 {
   "mode": "C-no-memory",
   "seed": 62,
-  "generations": 10,
   "num_agents": 100,
+  "generations": 10,
   "task_success_rates": [
     0.045799999999999993,
     0.13520000000000001,

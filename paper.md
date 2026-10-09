@@ -1,7 +1,7 @@
 # The Computational Cost of Active Teaching: Why Exact Parameter Copying Outperforms Iterative Inheritance in Generational Artificial Life
 
 **Abstract**
-In this paper, we evaluate the computational efficiency of cultural transmission (teaching) versus exact parameter copying in intelligent systems. Utilizing a perfectly synchronized dual-RNG artificial life simulation to eliminate stochastic confounds, we compared a specific active error-correcting teaching loop (C-full) against direct parameter mimicry (B-copy). Our empirical results demonstrate that simple exact copying achieves a strictly superior task success rate over the iterative teaching method (88.42% vs 84.73%, $p = 3.22 \times 10^{-87}$). We conclude that while biological systems rely on teaching due to the physical impossibility of direct neural parameter duplication, digital systems can bypass this bottleneck. For digital agents, the stochastic noise and algorithmic drift inherent in this iterative teaching implementation act as a computational drag, making exact parameter copying the optimal transmission algorithm in a frictionless digital environment.
+In this paper, we evaluate the computational efficiency of cultural transmission (teaching) versus exact parameter copying in intelligent systems. Utilizing a perfectly synchronized dual-RNG artificial life simulation to eliminate stochastic confounds, we compared a specific active error-correcting teaching loop (C-full) against direct parameter mimicry (B-copy). Our empirical results demonstrate that simple exact copying achieves a strictly superior task success rate over the iterative teaching method (88.42% vs 84.73%, $p = 3.22 \times 10^{-87}$). We conclude that while biological systems rely on teaching due to the physical impossibility of direct neural parameter duplication, digital systems can bypass this bottleneck. For digital agents, the stochastic noise and algorithmic drift inherent in this iterative teaching implementation act as a computational drag, making exact parameter copying perform better than the specific stochastic error-correction implementation in this experiment.
 
 ---
 
@@ -11,12 +11,12 @@ The emergence of intergenerational knowledge transfer (culture) is widely consid
 With the advent of artificial intelligence, we must ask: If a system is capable of instant, perfect parameter transmission (copying), does an algorithmic construct of "teaching" remain advantageous? This study mathematically demonstrates that for digital agents in this specific framework, active teaching introduces algorithmic drift, rendering it a suboptimal evolutionary strategy compared to exact copying.
 
 ## 2. Methodology
-To prevent global RNG contamination, we deployed a **Dual-RNG Architecture**. Each agent instantiated two cryptographically independent streams: an `inheritance_rng` and a `lifetime_rng`. This guaranteed that all populations experienced identical lifetime environmental challenges.
+To prevent global RNG contamination, we deployed a **Dual-RNG Architecture**. Each agent instantiated two separately seeded deterministic pseudorandom streams: an `inheritance_rng` and a `lifetime_rng`. This guaranteed that all populations experienced identical lifetime environmental challenges.
 
 The inheritance mechanisms were defined as:
 * **Condition B-copy (Exact Copy):** Offspring receive a direct, uncorrected mathematical duplication of the parent's skill matrices and semantic concepts.
 * **Condition C-full (Iterative Teaching):** Offspring undergo a simulated teaching loop. The algorithm calculates the error between the child's initialization and the parent's capability, applying up to three iterative, stochastic corrections.
-* **Condition A (No Inheritance):** Offspring start with baseline randomized initialization.
+* **Condition A (No Inheritance):** Offspring start by initializing skills to zero and concepts to an empty set.
 
 Populations of 100 agents were simulated over 10 generations. The environment was processed across 100 independent universe seeds to guarantee high statistical power.
 

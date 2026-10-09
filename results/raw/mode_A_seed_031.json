@@ -1,8 +1,8 @@
 {
   "mode": "A",
   "seed": 31,
-  "generations": 10,
   "num_agents": 100,
+  "generations": 10,
   "task_success_rates": [
     0.0404,
     0.039200000000000006,

@@ -1,8 +1,8 @@
 {
   "mode": "B-copy",
   "seed": 13,
-  "generations": 10,
   "num_agents": 100,
+  "generations": 10,
   "task_success_rates": [
     0.0446,
     0.14820000000000003,

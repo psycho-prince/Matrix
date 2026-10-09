@@ -1,8 +1,12 @@
-import json, glob, numpy as np
+import json, glob, numpy as np, sys
 from scipy import stats
 
-b_files = sorted(glob.glob("definitive_results/raw/mode_B-copy_seed_*.json"))
-c_files = sorted(glob.glob("definitive_results/raw/mode_C-full_seed_*.json"))
+b_files = sorted(glob.glob("results/raw/mode_B-copy_seed_*.json"))
+c_files = sorted(glob.glob("results/raw/mode_C-full_seed_*.json"))
+
+if not b_files or not c_files:
+    print("Error: No data files found in results/raw/")
+    sys.exit(1)
 
 b_gen10 = []
 c_gen10 = []

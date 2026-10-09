@@ -1,8 +1,8 @@
 {
   "mode": "C-low-effort",
   "seed": 39,
-  "generations": 10,
   "num_agents": 100,
+  "generations": 10,
   "task_success_rates": [
     0.049,
     0.13860000000000003,

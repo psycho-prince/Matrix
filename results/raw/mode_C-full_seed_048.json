@@ -1,8 +1,8 @@
 {
   "mode": "C-full",
   "seed": 48,
-  "generations": 10,
   "num_agents": 100,
+  "generations": 10,
   "task_success_rates": [
     0.0378,
     0.12120000000000002,
