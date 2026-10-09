@@ -59,6 +59,7 @@ def run_experiment(mode: str, num_agents: int, generations: int, num_seeds: int,
             json.dump({
                 "mode": mode,
                 "seed": seed,
+                "num_agents": num_agents,
                 "generations": generations,
                 "task_success_rates": res
             }, f, indent=2)
