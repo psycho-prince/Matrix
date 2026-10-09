@@ -75,7 +75,7 @@ class Agent:
         elif mode == 'B-copy':
             self.knowledge_concepts = set(parent_agent.knowledge_concepts)
             for skill, level in parent_agent.skills.items():
-                self.skills[skill] = level * 0.9
+                self.skills[skill] = level
                 
         elif mode == 'C-full':
             # TRUE TEACHING MECHANISM
