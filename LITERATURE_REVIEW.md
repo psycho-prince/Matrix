@@ -25,3 +25,20 @@ To contextualize the Matrix "capacity-shift" hypothesis within existing academic
 
 ## References to Investigate
 * (To be populated with specific papers and citations)
+
+## Autonomous Research Findings (October 2026)
+
+### 1. Continual Learning & The Stability-Plasticity Dilemma
+* **The Core Conflict:** The tension between plasticity (learning new tasks) and stability (retaining old tasks).
+* **Capacity Saturation:** Catastrophic forgetting is not purely a symptom of small model size; even massive models suffer from "capacity saturation" in sequential tasks as the optimization process overwrites previous task representations to minimize current errors.
+* **Matrix Application:** Matrix tests this explicitly. When an agent's memory capacity is constrained, retaining obsolete weights (via exact copying) leads to capacity saturation, preventing the learning of new tasks when the environment shifts. 
+
+### 2. Cultural Evolution: Transmission Error & Regularization
+* **Cumulative Cultural Evolution (CCE):** Requires high-fidelity transmission, but *transmission error* is a constant factor that introduces variation.
+* **Regularization as a Stabilizer:** Cognitive or social regularization processes filter out noise. However, the literature emphasizes a critical balance: if regularization is too weak, complex traits degrade; if it is too strong (like Matrix's exact copying), it stifles innovation.
+* **Matrix Application:** Matrix's "teaching" mechanism (C-full) acts as a mathematical proxy for lossy cultural transmission. By enforcing a bounded number of error-correction steps, it effectively introduces a form of regularization that prevents overfitting to the immediate generation's environment.
+
+### 3. Evolutionary Computation: Lamarckian Inheritance in Dynamic Environments
+* **Performance in Nonstationary Environments:** Evolutionary Robotics (ER) research consistently shows Lamarckian systems (which pass acquired weights to offspring, akin to Matrix's B-copy) adapt much more rapidly to shifting environments than Darwinian systems.
+* **The Overfitting Tradeoff:** The primary risk of Lamarckian transfer in these simulations is *premature convergence* to local optima. 
+* **Matrix Application:** Matrix's findings complicate the standard Lamarckian narrative. Our initial experiments show that when *capacity is limited*, the rapid adaptation of Lamarckian transfer (exact copying) becomes a liability during an environmental shift, as obsolete traits cannot be unlearned fast enough.
