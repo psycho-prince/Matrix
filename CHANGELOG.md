@@ -8,6 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial framework structure for Generational Artificial Life (GAL).
-- Core modules for Agents, Memory, Society, Evolution, Environment, and Metrics.
-- Setup for the baseline experiment (`exp001_baseline`).
+- Matrix simulation framework with dual-RNG architecture for strictly bounded generational inheritance testing.
+- Reproducibility automation script (`reproduce.sh`).
+- Independent validation checks (permutation test and seed parity verification).

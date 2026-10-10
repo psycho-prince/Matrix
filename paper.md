@@ -1,42 +1,40 @@
-# The Computational Cost of Active Teaching: Why Exact Parameter Copying Outperforms Iterative Inheritance in Generational Artificial Life
+# Evaluating Parameter Copying vs. Iterative Teaching in Matrix Environments
 
 **Abstract**
-In this paper, we evaluate the computational efficiency of cultural transmission (teaching) versus exact parameter copying in intelligent systems. Utilizing a perfectly synchronized dual-RNG artificial life simulation to eliminate stochastic confounds, we compared a specific active error-correcting teaching loop (C-full) against direct parameter mimicry (B-copy). Our empirical results demonstrate that simple exact copying achieves a strictly superior task success rate over the iterative teaching method (88.42% vs 84.73%, $p = 3.22 \times 10^{-87}$). We conclude that while biological systems rely on teaching due to the physical impossibility of direct neural parameter duplication, digital systems can bypass this bottleneck. For digital agents, the stochastic noise and algorithmic drift inherent in this iterative teaching implementation act as a computational drag, making exact parameter copying perform better than the specific stochastic error-correction implementation in this experiment.
+In this paper, we evaluate the computational efficiency of iterative cultural transmission (teaching) versus exact parameter copying in simulated intelligent systems. Utilizing a perfectly synchronized dual-RNG artificial life simulation (Matrix) to eliminate stochastic confounds, we compared a specific 3-step active error-correcting teaching loop (C-full) against direct parameter mimicry (B-copy). Our empirical results demonstrate that exact copying achieves a strictly superior task success rate over the specified iterative teaching method (88.42% vs 84.73%, $p_{\mathrm{MC}} < 10^{-5}$). However, this finding is largely bounded by the arbitrary hyperparameter limits of the teaching protocol. We conclude that exact copying trivially wins when transmission is treated as computationally free and frictionless. The true theoretical frontier for generational artificial life lies in exploring environments where copying incurs a penalty, parent/child architectures differ, or rapidly shifting environments render exact parameter clones obsolete.
 
 ---
 
 ## 1. Introduction
 The emergence of intergenerational knowledge transfer (culture) is widely considered a hallmark of advanced intelligence. Biological teaching---a feedback loop of demonstration, attempt, and correction---is a highly complex behavior.
 
-With the advent of artificial intelligence, we must ask: If a system is capable of instant, perfect parameter transmission (copying), does an algorithmic construct of "teaching" remain advantageous? This study mathematically demonstrates that for digital agents in this specific framework, active teaching introduces algorithmic drift, rendering it a suboptimal evolutionary strategy compared to exact copying.
+With the advent of artificial intelligence, we must ask: If a system is capable of instant, perfect parameter transmission (copying), does an algorithmic construct of "teaching" remain advantageous? This study mathematically models this dynamic for digital agents within a constrained framework. 
 
 ## 2. Methodology
 To prevent global RNG contamination, we deployed a **Dual-RNG Architecture**. Each agent instantiated two separately seeded deterministic pseudorandom streams: an `inheritance_rng` and a `lifetime_rng`. This guaranteed that all populations experienced identical lifetime environmental challenges.
 
 The inheritance mechanisms were defined as:
 * **Condition B-copy (Exact Copy):** Offspring receive a direct, uncorrected mathematical duplication of the parent's skill matrices and semantic concepts.
-* **Condition C-full (Iterative Teaching):** Offspring undergo a simulated teaching loop. The algorithm calculates the error between the child's initialization and the parent's capability, applying up to three iterative, stochastic corrections.
+* **Condition C-full (Iterative Teaching):** Offspring undergo a simulated teaching loop. The algorithm calculates the error between the child's initialization and the parent's capability, applying exactly three iterative, stochastic corrections.
 * **Condition A (No Inheritance):** Offspring start by initializing skills to zero and concepts to an empty set.
 
-Populations of 100 agents were simulated over 10 generations. The environment was processed across 100 independent universe seeds to guarantee high statistical power.
+Populations of 100 agents were simulated over 10 generations. The environment was processed across 100 independent universe seeds.
 
 ## 3. Results
-The empirical data shows a highly significant, unconfounded divergence in task success rates by Generation 10:
+The empirical data shows a divergence in task success rates by Generation 10:
 * **B-copy (Exact Copy):** $\mu = 0.8842$ (88.42%)
 * **C-full (Iterative Teaching):** $\mu = 0.8473$ (84.73%)
-* **Statistical Significance:** Paired t-test (N=100) yields $t = 71.83, p = 3.22 \times 10^{-87}$.
-* **Cohen's $d_z$:** $7.18$
 
-By Generation 10, the B-copy population massively outperformed the C-full population across all 100 tested seeds. The data empirically proves that the iterative error-correction loop in C-full introduces a significant performance penalty compared to raw parameter copying.
+A paired sign-flip permutation test (100,000 permutations) on the 100 seeds yielded an empirical probability of $p_{\mathrm{MC}} \approx 10^{-5}$, indicating strong statistical divergence under these specific constraints.
 
-## 4. Discussion
-The superiority of B-copy over C-full highlights a fundamental difference between biological and digital architectures.
+## 4. Discussion & Limitations
+While B-copy numerically outperformed C-full, careful independent validation reveals that this outcome is heavily determined by construction. 
 
-In biological systems, teaching is required because organisms cannot directly download synaptic weights; the process of demonstration and correction is a necessary workaround to transfer knowledge across the biological barrier.
+In C-full, "teaching" is explicitly bounded to three noisy steps toward the parent's skill value. As a result, C-full mathematically cannot overshoot the parent's value, and therefore exact copying (B-copy) will consistently tie or win. The measured performance gap is essentially an artifact of the 3-step hyperparameter. 
 
-However, in digital systems, exact parameter copying (B-copy) is near-instantaneous and lossless. The C-full algorithm attempts to simulate the biological teaching process, but in doing so, it introduces algorithmic noise and stochastic drift. 
+Furthermore, the simulation treats skills as capping at 1.0, meaning generations act functionally as a longer continuous lifespan rather than an interactive cultural mechanism. 
 
-Therefore, exact copying is a strictly superior optimization algorithm in this artificial substrate. This finding provides strong evidence that as artificial intelligence scales, developers should prioritize direct parameter transmission (neural weight cloning) over simulated pedagogical loops.
+The interesting scientific challenge remains untested: What occurs when copying is not "free"? In realistic physical or advanced neural architectures, copying carries substantial computational, storage, or energy costs. Furthermore, in rapidly non-stationary environments, a perfect clone of a parent's neural weights may inherently encode obsolete strategies, granting an advantage to iterative, generalized teaching methods that compress knowledge rather than memorizing state.
 
 ## 5. Conclusion
-We have demonstrated, via rigorously unconfounded Artificial Life simulation, that exact inheritance produces higher task-success rates than a specific stochastic error-correction procedure. As artificial intelligence architectures continue to evolve, the distinction between biological constraints and digital capabilities must dictate optimal design.
+Under the tested simulation conditions, exact-copy inheritance achieved a higher mean final task-success score than the specified 3-step stochastic iterative error-correction inheritance method across 100 paired seeds. Future research must discard frictionless copying assumptions and introduce lifetime-matched single-agent baselines, architectural transmission costs, and shifting environmental parameters to truly probe the boundary between copying and teaching.

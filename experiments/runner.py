@@ -123,10 +123,10 @@ def run_stats(results_summary, stats_dir):
     b_copy = results_summary['B-copy']['raw'][:, -1]
     
     # Paired t-test
-    t_stat, p_val = stats.ttest_rel(c_full, b_copy)
+    t_stat, p_val = stats.ttest_rel(b_copy, c_full)
     
     # Paired effect size (d_z)
-    differences = c_full - b_copy
+    differences = b_copy - c_full
     mean_diff = np.mean(differences)
     sd_diff = np.std(differences, ddof=1)
     cohens_d_z = mean_diff / sd_diff if sd_diff > 0 else float('inf')
@@ -135,20 +135,20 @@ def run_stats(results_summary, stats_dir):
     mean_b = np.mean(b_copy)
     
     report = {
-        "comparison": "C-full vs B-copy",
+        "comparison": "B-copy vs C-full",
         "test": "Paired t-test",
         "t_statistic": float(t_stat),
         "p_value": float(p_val),
         "cohens_d_z": float(cohens_d_z),
         "significant_at_05": bool(p_val < 0.05),
-        "mean_c_full": float(mean_c),
-        "mean_b_copy": float(mean_b)
+        "mean_b_copy": float(mean_b),
+        "mean_c_full": float(mean_c)
     }
     
     with open(stats_dir / "statistical_report.json", "w") as f:
         json.dump(report, f, indent=4)
         
-    print(f"Paired t-test C-full vs B-copy: t={t_stat:.4f}, p={p_val:.2e}, d_z={cohens_d_z:.4f}")
+    print(f"Paired t-test B-copy vs C-full: t={t_stat:.4f}, p={p_val:.2e}, d_z={cohens_d_z:.4f}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

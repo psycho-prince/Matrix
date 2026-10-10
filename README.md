@@ -1,8 +1,8 @@
-# Generational Artificial Life
+# Matrix: Generational Artificial Life
 
 ### What happens when AI becomes a population rather than a model?
 
-Generational Artificial Life (GAL) is an experimental framework for
+Matrix: Generational Artificial Life (GAL) is an experimental framework for
 studying persistent artificial populations whose individuals develop,
 learn, work, communicate, transfer knowledge to successors, and
 participate in multi-generational cultural evolution.
@@ -50,10 +50,10 @@ Current focus:
 
 ## Project Structure
 
-- `gal/`: Core framework for the Generational Artificial Life simulation.
+- `gal/`: Core framework for the Matrix: Generational Artificial Life simulation.
 - `experiments/`: Reproducible experimental setups.
 - `docs/`: Architecture and theoretical framework.
-- `paper/`: Ongoing research manuscripts.
+- `paper.pdf`: Research manuscript.
 - `configs/`: Experiment configuration files.
 
 ## License
