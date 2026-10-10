@@ -1,63 +1,23 @@
-# Matrix: Generational Artificial Life
+# Matrix: Generational Artificial Life (GAL)
 
-### What happens when AI becomes a population rather than a model?
-
-Matrix: Generational Artificial Life (GAL) is an experimental framework for
-studying persistent artificial populations whose individuals develop,
-learn, work, communicate, transfer knowledge to successors, and
-participate in multi-generational cultural evolution.
-
-Instead of training one model indefinitely, GAL investigates whether
-intelligence and knowledge can accumulate at the population level
-through generations of artificial individuals.
-
-                    Individual
-                       │
-                    develops
-                       │
-                     learns
-                       │
-                     works
-                       │
-                    teaches
-                       │
-                   successor
-                       │
-                     dies
-                       │
-                  next generation
-                       │
-                       ▼
-                 accumulated culture
-
-## Research Question
-
-Can generational continuity produce cumulative capabilities
-that independent artificial agents cannot efficiently develop?
-
-## Status
-
-🚧 Research prototype
-
-Current focus:
-- persistent artificial individuals
-- finite lifetimes
-- developmental learning
-- knowledge inheritance
-- successor training
-- population dynamics
-- cultural evolution
+This repository contains the codebase and scientific findings for the **Generational Artificial Life (GAL)** research project.
 
 ## Project Structure
 
-- `gal/`: Core framework for the Matrix: Generational Artificial Life simulation.
-- `experiments/`: Reproducible experimental setups.
-- `docs/`: Architecture and theoretical framework.
-- `paper.pdf`: Research manuscript.
-- `configs/`: Experiment configuration files.
+* **`manuscripts/`**: Contains the draft papers and preprints synthesizing our findings.
+  * `paper1/`: The foundational Capacity-Saturation Trap.
+  * `paper2/`: The discovery of the Golden Ratio attractor under chaotic volatility.
+  * `paper3/`: "Memory Economics" - Co-evolution of learning rate, retention, and capacity.
+  * `preprints/`: Literature reviews and release logs.
+* **`experiments/`**: Contains the reproducible evolutionary scripts categorized by research phase.
+  * `01_llm_prototypes/`: Early generative AI and cultural evolution prototypes.
+  * `02_capacity_trap/`: Scripts establishing the bounds of memory capacity.
+  * `03_golden_ratio/`: Scripts documenting the mathematical emergence of the ~$0.618$ attractor.
+  * `04_memory_economics/`: Scripts for the joint-evolution phase diagrams and cost-of-learning metrics.
+* **`analysis/`**: Validation scripts and statistical analyzers.
+* **`scripts/`**: Utility scripts for testing LLM models and running helper functions.
+* **`data/`**: Output data from major simulation runs.
+* **`gal/`**: The core simulation engine module.
 
-## License
-
-- Source Code: Apache License 2.0
-- Research Papers & Documentation: CC BY 4.0
-- Datasets: CC BY 4.0 / CC0 (as specified per dataset)
+## Reproduction
+Each manuscript directory contains its respective reproducibility script (e.g. `reproduce.sh`). 
