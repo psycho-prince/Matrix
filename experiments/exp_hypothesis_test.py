@@ -1,7 +1,7 @@
 import random
 import numpy as np
+from scipy import stats
 
-# A simplified, uncapped environment to test the "Saturated World" and "Long-Lived" hypotheses
 class UncappedTask:
     def __init__(self, name: str, required_skill: str, difficulty: float):
         self.name = name
@@ -24,15 +24,17 @@ class UncappedAgent:
         
     def learn(self, steps: int):
         for _ in range(steps):
-            # Uncapped learning
             self.skills["logic"] += self.rng.uniform(0.01, 0.1)
             
-    def work(self, difficulty: float, num_tasks: int = 10):
+    def work(self, difficulty: float, num_tasks: int = 10, record: bool = True):
         task = UncappedTask("solve", "logic", difficulty)
         for _ in range(num_tasks):
-            self.tasks_attempted += 1
-            if task.attempt(self.skills["logic"], self.rng):
-                self.tasks_succeeded += 1
+            if record:
+                self.tasks_attempted += 1
+            success = task.attempt(self.skills["logic"], self.rng)
+            if success:
+                if record:
+                    self.tasks_succeeded += 1
                 self.skills["logic"] += 0.02 # Learn by doing
 
     @property
@@ -40,62 +42,54 @@ class UncappedAgent:
         if self.tasks_attempted == 0: return 0.0
         return self.tasks_succeeded / self.tasks_attempted
 
-def run_generational(seeds, generations, learn_steps_per_gen):
-    successes = []
+def run_paired_comparison(seeds=100, generations=10, learn_steps=15, work_tasks=50):
+    gen_scores = []
+    immortal_scores = []
+    
     for seed in range(seeds):
-        rng = random.Random(seed)
-        difficulty = 0.5
+        # 1. Generational Run
+        rng_gen = random.Random(seed)
+        diff_gen = 0.5
         current_skill = 0.0
+        final_gen_score = 0.0
         
         for g in range(generations):
-            agent = UncappedAgent(rng)
-            # B-copy inheritance
-            agent.skills["logic"] = current_skill 
-            
-            agent.learn(learn_steps_per_gen)
-            difficulty += 0.1 # World gets harder over time, won't saturate
-            agent.work(difficulty, num_tasks=50)
-            current_skill = agent.skills["logic"]
-            
-        successes.append(agent.success_rate)
-    return np.mean(successes)
-
-def run_single_long_lived(seeds, generations, learn_steps_per_gen):
-    successes = []
-    for seed in range(seeds):
-        rng = random.Random(seed)
-        difficulty = 0.5
+            agent_gen = UncappedAgent(rng_gen)
+            agent_gen.skills["logic"] = current_skill
+            agent_gen.learn(learn_steps)
+            diff_gen += 0.1
+            # Only record tasks on the final generation
+            record = (g == generations - 1)
+            agent_gen.work(diff_gen, num_tasks=work_tasks, record=record)
+            current_skill = agent_gen.skills["logic"]
+            if record:
+                final_gen_score = agent_gen.success_rate
+        gen_scores.append(final_gen_score)
         
-        agent = UncappedAgent(rng)
+        # 2. Immortal Run
+        rng_imm = random.Random(seed)
+        diff_imm = 0.5
+        agent_imm = UncappedAgent(rng_imm)
         
         for g in range(generations):
-            # Same lifetime learning events as the generational agents
-            agent.learn(learn_steps_per_gen)
-            difficulty += 0.1 # World gets harder over time
-            agent.work(difficulty, num_tasks=50)
+            agent_imm.learn(learn_steps)
+            diff_imm += 0.1
+            # Only record tasks on the final generation equivalent
+            record = (g == generations - 1)
+            agent_imm.work(diff_imm, num_tasks=work_tasks, record=record)
             
-        # We only measure the final epoch's success rate for fairness
-        # by resetting the task counters before the last work phase, or just looking at overall
-        # Let's reset counters to measure just the final generation's capability
-        agent.tasks_attempted = 0
-        agent.tasks_succeeded = 0
-        agent.work(difficulty, num_tasks=50)
+        immortal_scores.append(agent_imm.success_rate)
         
-        successes.append(agent.success_rate)
-    return np.mean(successes)
+    return np.array(gen_scores), np.array(immortal_scores)
 
 if __name__ == "__main__":
-    seeds = 100
-    generations = 10
-    learn_steps = 15
+    print("Testing Hypothesis: Exact Copying vs Immortal Agent (Fair Baseline)")
+    gen_scores, imm_scores = run_paired_comparison()
     
-    print("Testing Hypothesis: Generations act as a longer life in an uncapped world.")
-    gen_score = run_generational(seeds, generations, learn_steps)
-    immortal_score = run_single_long_lived(seeds, generations, learn_steps)
+    diff = imm_scores - gen_scores
+    t_stat, p_val = stats.ttest_rel(imm_scores, gen_scores)
     
-    print(f"\n10 Generations of B-copy agents (Final Gen Success Rate): {gen_score:.4f}")
-    print(f"1 Single Long-Lived agent (Final Epoch Success Rate): {immortal_score:.4f}")
-    
-    if immortal_score >= gen_score:
-        print("\nConclusion: The single agent matches or beats the copied generations.")
-        print("This confirms the critique: Without a transmission cost or capacity penalty, B-copy is trivially equivalent to a single continuous lifespan.")
+    print(f"10 Generations (Final Epoch Mean): {np.mean(gen_scores):.4f}")
+    print(f"Single Long-Lived (Final Epoch Mean): {np.mean(imm_scores):.4f}")
+    print(f"Paired Difference (Immortal - Gen): {np.mean(diff):.4f}")
+    print(f"t-statistic: {t_stat:.4f}, p-value: {p_val:.4e}")
