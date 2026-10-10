@@ -1,5 +1,7 @@
 import random
 import numpy as np
+import json
+import os
 
 class UltimateAgent:
     def __init__(self, rng: random.Random, trait_cap: float, trait_f: float, trait_lr: float):
@@ -25,7 +27,6 @@ class UltimateAgent:
                 self.enforce_capacity()
 
     def work(self, active_skill: str, difficulty: float, max_time: int):
-        # Time cost for learning faster (moderate penalty, factor=50)
         time_cost = int(self.trait_lr * 50)
         num_tasks = max(1, max_time - time_cost)
         
@@ -46,20 +47,11 @@ class UltimateAgent:
     @property
     def fitness(self) -> float:
         if self.tasks_attempted == 0: return 0.0
-        
-        # Base efficiency
         efficiency = self.tasks_succeeded / self.tasks_attempted
-        
-        # Absolute productivity (max possible tasks = max_time)
         productivity = self.tasks_succeeded / 30.0 
-        
         raw_fitness = (efficiency * 0.5) + (productivity * 0.5)
-        
-        # Metabolic cost to maintaining large capacity brain
         metabolic_cost = self.capacity * 0.05
-        
         return max(0.0, raw_fitness - metabolic_cost)
-
 
 def generate_periodic_shifts(frequency, max_gen):
     shifts = set()
@@ -79,17 +71,16 @@ def generate_chaotic_shifts(max_gen):
                 shifts.add(current_gen)
     return shifts
 
-def run_joint_experiment(shift_mode, frequency=None, population_size=100, generations=500):
+def run_joint_experiment_single_seed(shift_mode, frequency, seed, population_size=100, generations=500):
     if shift_mode == "periodic":
         shifts = generate_periodic_shifts(frequency, generations)
     else:
         shifts = generate_chaotic_shifts(generations)
         
-    rng = random.Random(42 + (frequency if frequency else 0))
+    rng = random.Random(seed)
     
     population = []
     for _ in range(population_size):
-        # Initial traits: f=random, lr=random(low), cap=1.0
         population.append((rng.random(), rng.uniform(0.01, 0.10), rng.uniform(0.5, 2.0), {"A": 0.0, "B": 0.0}))
         
     current_skill = "A"
@@ -115,32 +106,40 @@ def run_joint_experiment(shift_mode, frequency=None, population_size=100, genera
         next_pop = []
         while len(next_pop) < population_size:
             parent = rng.choice(parents)
-            
-            # Mutate traits
             child_f = max(0.0, min(1.0, parent.trait_f + rng.gauss(0, 0.05)))
             child_lr = max(0.001, min(0.25, parent.trait_lr + rng.gauss(0, 0.01)))
             child_cap = max(0.1, min(5.0, parent.capacity + rng.gauss(0, 0.1)))
-            
             next_pop.append((child_f, child_lr, child_cap, parent.skills.copy()))
             
         population = next_pop
         
-    # Average over last 50 generations to smooth out volatility
-    # We will just return the final population means for simplicity,
-    # as the population size provides some averaging.
     mean_f = np.mean([p[0] for p in population])
     mean_lr = np.mean([p[1] for p in population])
     mean_cap = np.mean([p[2] for p in population])
     
     return mean_f, mean_lr, mean_cap
 
+def run_multi_seed(shift_mode, frequency, num_seeds=5, generations=500):
+    results_f, results_lr, results_cap = [], [], []
+    for s in range(num_seeds):
+        f, lr, cap = run_joint_experiment_single_seed(shift_mode, frequency, seed=42+s+ (frequency if frequency else 0), generations=generations)
+        results_f.append(f)
+        results_lr.append(lr)
+        results_cap.append(cap)
+        
+    return {
+        "f_mean": np.mean(results_f), "f_std": np.std(results_f),
+        "lr_mean": np.mean(results_lr), "lr_std": np.std(results_lr),
+        "cap_mean": np.mean(results_cap), "cap_std": np.std(results_cap)
+    }
+
 if __name__ == "__main__":
-    print("=== Joint Evolution Under Varying Environmental Volatility ===")
+    print("=== Joint Evolution Under Varying Environmental Volatility (Multi-Seed) ===")
     print("Agents co-evolve Retention (f), Learning Rate (lr), and Capacity (cap)")
-    print("with a moderate cost applied to both high learning and large capacity.")
-    print("-" * 80)
-    print("Environment          | Shift Freq  | Retention (f) | Learn Rate (lr) | Capacity")
-    print("-" * 80)
+    print("Averaged over 5 independent random seeds. (± represents 1 StdDev)")
+    print("-" * 105)
+    print("Environment          | Shift Freq  | Retention (f)      | Learn Rate (lr)    | Capacity (cap)")
+    print("-" * 105)
     
     scenarios = [
         ("Hyper-Volatile", "periodic", 2),
@@ -151,8 +150,22 @@ if __name__ == "__main__":
         ("Hyper-Stable", "periodic", 200)
     ]
     
+    all_results = {}
+    
     for name, mode, freq in scenarios:
-        f, lr, cap = run_joint_experiment(mode, freq, generations=800)
+        stats = run_multi_seed(mode, freq, num_seeds=5, generations=500)
         freq_str = str(freq) if freq else "Mixed"
-        print(f"{name:<20} | {freq_str:<11} | {f:<13.4f} | {lr:<15.4f} | {cap:.4f}")
+        
+        f_str = f"{stats['f_mean']:.3f} ±{stats['f_std']:.3f}"
+        lr_str = f"{stats['lr_mean']:.3f} ±{stats['lr_std']:.3f}"
+        cap_str = f"{stats['cap_mean']:.3f} ±{stats['cap_std']:.3f}"
+        
+        print(f"{name:<20} | {freq_str:<11} | {f_str:<18} | {lr_str:<18} | {cap_str}")
+        all_results[name] = stats
+        
+    import os
+    save_dir = os.path.join(os.path.dirname(__file__), '../../data')
+    os.makedirs(save_dir, exist_ok=True)
+    with open(os.path.join(save_dir, "phase_diagram_multiseed.json"), "w") as f:
+        json.dump(all_results, f, indent=2)
 
