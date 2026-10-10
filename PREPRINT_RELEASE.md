@@ -1,7 +1,7 @@
 # GAL Simulation: Matrix-Main Preprint Release Notes
 
 ## Release Commit
-**Commit Hash:** `e215cbc652dc695c8bacb7a5e50d874e82aba56c`
+**Commit Hash:** `v1.0-preprint`
 **Environment:** Linux (Python 3.x), detailed in `requirements.txt`
 
 ## 1. Verified Scientific Claim
