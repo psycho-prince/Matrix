@@ -68,7 +68,7 @@ def adaptive_retention(era_length):
 def run_ultimate_simulation(capacity=1.0, seeds=100):
     shifts, max_generations = generate_ultimate_shifts()
     
-    modes = ['Exact', 'Lossy_50', 'Golden_Ratio', 'Adaptive_Law']
+    modes = ['Exact', 'Lossy_50', 'Golden_Ratio', 'Rational_3_5', 'Adaptive_Law']
     history = {m: [] for m in modes}
     
     for seed in range(seeds):
@@ -100,6 +100,8 @@ def run_ultimate_simulation(capacity=1.0, seeds=100):
                     f = 0.5
                 elif m == 'Golden_Ratio':
                     f = 0.618
+                elif m == 'Rational_3_5':
+                    f = 0.600
                 elif m == 'Adaptive_Law':
                     # The adaptive law only drops memory drastically when a shift actually occurs.
                     # If it's a stable generation, it retains 100% to keep performing well.
@@ -129,8 +131,9 @@ if __name__ == "__main__":
     print("Agent Strategies Racing:")
     print("1. Exact Copying (100% Retention)")
     print("2. Standard Lossy (50% Fixed Retention)")
-    print("3. Golden Ratio (61.8% Fixed Retention)")
-    print("4. Adaptive Law (Retention scales inversely with stability era length)\n")
+    print("3. Rational 3/5 (60.0% Fixed Retention)")
+    print("4. Golden Ratio (61.8% Fixed Retention)")
+    print("5. Adaptive Law (Retention scales inversely with stability era length)\n")
     
     results = run_ultimate_simulation(capacity=1.0, seeds=100)
     
