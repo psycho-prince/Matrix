@@ -1,0 +1,37 @@
+name: Scientific Reproducibility & Audit CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate-science:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install Scientific Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install numpy scipy matplotlib
+
+    - name: Run Scientific Validation Audit (P-Value & Cryptographic Verification)
+      run: |
+        python analysis/verify_scientific_validity.py
+
+    - name: Run Neural Continual Learning Multi-Seed Test
+      run: |
+        python experiments/05_neural_continual_learning/run_multi_seed_neural.py
+
+    - name: Run Spatial Lattice GAL Simulation
+      run: |
+        python experiments/06_spatial_lattice_gal/spatial_lattice_gal.py

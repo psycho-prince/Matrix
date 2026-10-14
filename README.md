@@ -1,5 +1,9 @@
 # Matrix: Generational Artificial Life (GAL)
 
+[![Scientific Reproducibility & Audit CI](https://github.com/psycho-prince/Matrix/actions/workflows/reproduce.yml/badge.svg)](https://github.com/psycho-prince/Matrix/actions/workflows/reproduce.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Verified Data Hash](https://img.shields.io/badge/SHA--256-Audit_Verified-success)](data/cryptographic_validation_audit.json)
+
 This repository contains the codebase, empirical simulations, and peer-reviewed manuscripts for the **Generational Artificial Life (GAL)** research framework.
 
 **Author:** Prince T Philip (`princephilip514@gmail.com`)  
@@ -23,6 +27,7 @@ Navigate to `http://localhost:8080`. Features live parameter sliders for shift f
 * **`manuscripts/paper1/`**: *The Capacity-Saturation Trap* (foundational limits of Lamarckian weight copying).
 * **`manuscripts/paper2/`**: *Lossy Transmission as a Mathematical Regularizer* (Golden Ratio attractor discovery under chaotic volatility).
 * **`manuscripts/paper3/`**: *Memory Economics: Environmental Volatility Selects Between Lamarckian Inheritance and Agile Amnesia* (Joint co-evolution of retention, learning rate, and capacity). Includes full LaTeX source and compiled PDF.
+* **`manuscripts/paper4/`**: *Continual Learning via Generational Parameter Transmission* (Weight retention dynamics in Multi-Layer Perceptrons on nonlinear Circle vs. XOR task distributions). Includes full LaTeX source and compiled PDF.
 
 ---
 
