@@ -128,6 +128,22 @@
             <div class="chart-box" style="height: 280px;">
                 <canvas id="infoChart"></canvas>
             </div>
+
+            <!-- 2D Spatial Lattice Canvas -->
+            <div class="panel" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="font-size: 1rem; color: var(--accent);">2D Spatial Lattice & Traveling Environmental Front</h3>
+                    <div style="font-size: 0.8rem; color: var(--muted);">Cells colored by Retention (f): <span style="color:#38bdf8;">■ Blue = High (Rentier)</span> | <span style="color:#f43f5e;">■ Red = Low (Amnesia)</span></div>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <canvas id="spatialCanvas" width="320" height="320" style="border: 1px solid #334155; border-radius: 6px; background: #000;"></canvas>
+                    <div style="font-size: 0.85rem; color: var(--muted); line-height: 1.6;">
+                        <p><strong>Spatial Ecology Refuges:</strong></p>
+                        <p>A continuous environmental wave travels horizontally across the grid. Watch local neighborhoods adapt: sheltered zones preserve ancestral cultural memory while the active front triggers rapid amnesia resetting.</p>
+                        <p style="margin-top: 8px;">Wave Front Position: <span id="val-wave" style="color: var(--accent3); font-weight: bold;">Col 0</span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -364,9 +380,44 @@
 
                 window.lastRunData = { historyF, historyLr, historyCap, historyInh, historyLrn, gens };
 
+                // Render 2D Spatial Lattice Grid
+                drawSpatialGrid(population, maxGens % 16);
+
                 btn.innerText = "▶ Run Simulation";
                 btn.disabled = false;
             }, 50);
+        }
+
+        function drawSpatialGrid(pop, waveCol) {
+            const canvas = document.getElementById('spatialCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = 16;
+            const cellSize = canvas.width / size;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const idx = (r * size + c) % pop.length;
+                    const f = pop[idx].f;
+                    // Interpolate color: Red (Amnesia, f=0) to Blue (Rentier, f=1)
+                    const red = Math.floor(244 * (1 - f) + 56 * f);
+                    const green = Math.floor(63 * (1 - f) + 189 * f);
+                    const blue = Math.floor(94 * (1 - f) + 248 * f);
+                    ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize - 1, cellSize - 1);
+                }
+            }
+
+            // Draw wave front vertical line
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(waveCol * cellSize, 0);
+            ctx.lineTo(waveCol * cellSize, canvas.height);
+            ctx.stroke();
+            const waveLabel = document.getElementById('val-wave');
+            if (waveLabel) waveLabel.innerText = `Col ${waveCol}`;
         }
 
         function downloadCurrentData() {
