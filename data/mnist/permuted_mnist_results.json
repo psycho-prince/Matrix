@@ -1,67 +1,34 @@
 {
-  "Adaptive Lossy (Ours, f=0.45)": {
-    "mean_continual_accuracy": 74.79,
-    "task1_initial_accuracy": 82.29,
-    "task1_final_accuracy": 69.79,
-    "catastrophic_forgetting": 12.5,
-    "task_accuracies": [
-      69.8,
-      76.0,
-      76.0,
-      76.0,
-      76.0
-    ]
+  "standard_regime": {
+    "Variance-Preserving Reset (Ours)": {
+      "mean_continual_acc": 54.58,
+      "task1_forgetting": 19.79,
+      "task5_accuracy": 95.83
+    },
+    "Elastic Weight Consolidation (EWC)": {
+      "mean_continual_acc": 83.54,
+      "task1_forgetting": 8.33,
+      "task5_accuracy": 95.83
+    },
+    "Experience Replay (ER)": {
+      "mean_continual_acc": 83.75,
+      "task1_forgetting": 8.33,
+      "task5_accuracy": 95.83
+    },
+    "Naive Sequential Cloning (f=1.0)": {
+      "mean_continual_acc": 83.12,
+      "task1_forgetting": 9.38,
+      "task5_accuracy": 95.83
+    },
+    "Tabula Rasa / Reset (f=0.0)": {
+      "mean_continual_acc": 52.92,
+      "task1_forgetting": 29.17,
+      "task5_accuracy": 76.04
+    }
   },
-  "Elastic Weight Consolidation (EWC)": {
-    "mean_continual_accuracy": 83.54,
-    "task1_initial_accuracy": 82.29,
-    "task1_final_accuracy": 73.96,
-    "catastrophic_forgetting": 8.33,
-    "task_accuracies": [
-      74.0,
-      86.5,
-      76.0,
-      85.4,
-      95.8
-    ]
-  },
-  "Experience Replay (ER)": {
-    "mean_continual_accuracy": 83.96,
-    "task1_initial_accuracy": 82.29,
-    "task1_final_accuracy": 73.96,
-    "catastrophic_forgetting": 8.33,
-    "task_accuracies": [
-      74.0,
-      87.5,
-      76.0,
-      86.5,
-      95.8
-    ]
-  },
-  "Naive Sequential Cloning (f=1.0)": {
-    "mean_continual_accuracy": 83.12,
-    "task1_initial_accuracy": 82.29,
-    "task1_final_accuracy": 72.92,
-    "catastrophic_forgetting": 9.38,
-    "task_accuracies": [
-      72.9,
-      85.4,
-      76.0,
-      85.4,
-      95.8
-    ]
-  },
-  "Tabula Rasa / Reset (f=0.0)": {
-    "mean_continual_accuracy": 52.92,
-    "task1_initial_accuracy": 82.29,
-    "task1_final_accuracy": 53.12,
-    "catastrophic_forgetting": 29.17,
-    "task_accuracies": [
-      53.1,
-      59.4,
-      25.0,
-      51.0,
-      76.0
-    ]
+  "bottleneck_plasticity_regime": {
+    "cloning_task5_acc": 96.88,
+    "lossy_task5_acc": 90.62,
+    "plasticity_advantage_percent": -6.25
   }
 }

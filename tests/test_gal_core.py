@@ -58,12 +58,13 @@ def test_permuted_mnist_continual_results():
     assert os.path.exists(mnist_res_path), "Permuted-MNIST results missing"
     with open(mnist_res_path, "r") as f:
         res = json.load(f)
-    assert "Elastic Weight Consolidation (EWC)" in res
-    assert "Adaptive Lossy (Ours, f=0.45)" in res
-    assert "Naive Sequential Cloning (f=1.0)" in res
-    # Verify EWC and Lossy outperform Tabula Rasa on retention
-    assert res["Elastic Weight Consolidation (EWC)"]["mean_continual_accuracy"] > res["Tabula Rasa / Reset (f=0.0)"]["mean_continual_accuracy"]
-    assert res["Adaptive Lossy (Ours, f=0.45)"]["mean_continual_accuracy"] > res["Tabula Rasa / Reset (f=0.0)"]["mean_continual_accuracy"]
+    std = res.get("standard_regime", res)
+    assert "Elastic Weight Consolidation (EWC)" in std
+    assert "Variance-Preserving Reset (Ours)" in std
+    assert "Naive Sequential Cloning (f=1.0)" in std
+    # Verify EWC and Lossy outperform Tabula Rasa on retention / continual accuracy
+    assert std["Elastic Weight Consolidation (EWC)"]["mean_continual_acc"] > std["Tabula Rasa / Reset (f=0.0)"]["mean_continual_acc"]
+    assert std["Variance-Preserving Reset (Ours)"]["mean_continual_acc"] > std["Tabula Rasa / Reset (f=0.0)"]["mean_continual_acc"]
 
 def test_cost_sensitivity_analysis():
     sens_path = os.path.join(os.path.dirname(__file__), "../data/cost_sensitivity_analysis.json")
@@ -76,3 +77,24 @@ def test_cost_sensitivity_analysis():
     # Quadratic and linear forms must preserve phase boundary
     assert sens["functional_form_sweep"]["linear"]["phase_preserved"] is True
     assert sens["functional_form_sweep"]["quadratic"]["phase_preserved"] is True
+
+def test_variance_preserving_energy_conservation():
+    import importlib.util
+    file_path = os.path.join(os.path.dirname(__file__), "../experiments/05_neural_continual_learning/permuted_mnist_continual.py")
+    spec = importlib.util.spec_from_file_location("permuted_mnist_continual", file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    VariancePreservingAgent = module.VariancePreservingAgent
+
+    agent = VariancePreservingAgent(hidden_dim=16, f=0.55, seed=42)
+    initial_std = np.std(agent.W1)
+
+    # Propagate across 10 generations
+    for g in range(10):
+        child = VariancePreservingAgent(hidden_dim=16, f=0.55, seed=42+g)
+        child.inherit_variance_preserving(agent, seed=100+g)
+        agent = child
+
+    final_std = np.std(agent.W1)
+    # Variance must be strictly conserved within 10% tolerance (Theorem 2)
+    assert abs(final_std - initial_std) < 0.03, f"Energy conservation violated: init={initial_std}, final={final_std}"
