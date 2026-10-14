@@ -19,6 +19,10 @@ def test_paper_pdfs_exist():
         if i == 1:
             pdf_path = os.path.join(os.path.dirname(__file__), "../manuscripts/paper1/paper.pdf")
         assert os.path.exists(pdf_path), f"Paper {i} PDF missing at {pdf_path}"
+    
+    # Consolidated journal paper
+    journal_pdf = os.path.join(os.path.dirname(__file__), "../manuscripts/journal_consolidated/journal_paper.pdf")
+    assert os.path.exists(journal_pdf), f"Consolidated Journal PDF missing at {journal_pdf}"
 
 def test_neural_continual_agent():
     import importlib.util

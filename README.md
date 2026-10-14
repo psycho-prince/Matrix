@@ -24,10 +24,11 @@ Navigate to `http://localhost:8080`. Features live parameter sliders for shift f
 ---
 
 ## 🔬 Manuscripts & Preprints
+* **`manuscripts/journal_consolidated/`**: **Flagship Consolidated Treatise** (*Memory Economics in Generational Artificial Life: How Environmental Volatility Dictates the Phase Boundary Between Lamarckian Inheritance and Agile Amnesia*). Synthesizes the Capacity Trap, the 90-seed multi-regime statistical audit ($p = 2.86 \times 10^{-32}$), and Neural Continual Learning into a unified submission targeting **ALIFE / GECCO / CoLLAs / Artificial Life (MIT Press)**. Includes LaTeX source and compiled PDF.
 * **`manuscripts/paper1/`**: *The Capacity-Saturation Trap* (foundational limits of Lamarckian weight copying).
 * **`manuscripts/paper2/`**: *Lossy Transmission as a Mathematical Regularizer* (Golden Ratio attractor discovery under chaotic volatility).
-* **`manuscripts/paper3/`**: *Memory Economics: Environmental Volatility Selects Between Lamarckian Inheritance and Agile Amnesia* (Joint co-evolution of retention, learning rate, and capacity). Includes full LaTeX source and compiled PDF.
-* **`manuscripts/paper4/`**: *Continual Learning via Generational Parameter Transmission* (Weight retention dynamics in Multi-Layer Perceptrons on nonlinear Circle vs. XOR task distributions). Includes full LaTeX source and compiled PDF.
+* **`manuscripts/paper3/`**: *Memory Economics: Environmental Volatility Selects Between Lamarckian Inheritance and Agile Amnesia* (Joint co-evolution of retention, learning rate, and capacity).
+* **`manuscripts/paper4/`**: *Continual Learning via Generational Parameter Transmission* (Weight retention dynamics in Multi-Layer Perceptrons on nonlinear Circle vs. XOR task distributions).
 
 ---
 
