@@ -1,0 +1,7 @@
+{
+  "mean_accuracy_adaptive": 0.952375,
+  "mean_accuracy_exact_cloning": 0.9718958333333333,
+  "accuracy_advantage_percent": -1.952083333333332,
+  "final_evolved_f": 0.9806235787184513,
+  "final_evolved_lr": 0.005189091058864446
+}
