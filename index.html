@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAL Matrix — Memory Economics Interactive Simulator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="export_data.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -89,6 +90,7 @@
                 <button class="btn-primary" id="btn-run" onclick="runSimulation()">▶ Run Simulation</button>
                 <button class="btn-secondary" onclick="resetDefaults()">Reset</button>
             </div>
+            <button class="btn-secondary" style="width: 100%; margin-top: 10px; background: #0284c7;" onclick="downloadCurrentData()">📥 Export Raw Run Data (CSV)</button>
             
             <div style="margin-top: 25px; font-size: 0.8rem; color: var(--muted); border-top: 1px solid #334155; padding-top: 15px;">
                 <strong>How it works:</strong><br>
@@ -360,9 +362,17 @@
                 badge.className = "badge " + badgeClass;
                 badge.innerText = regime;
 
+                window.lastRunData = { historyF, historyLr, historyCap, historyInh, historyLrn, gens };
+
                 btn.innerText = "▶ Run Simulation";
                 btn.disabled = false;
             }, 50);
+        }
+
+        function downloadCurrentData() {
+            if (!window.lastRunData) { alert("Please run a simulation first!"); return; }
+            const d = window.lastRunData;
+            exportSimulationData(d.historyF, d.historyLr, d.historyCap, d.historyInh, d.historyLrn, d.gens);
         }
 
         window.onload = () => {
