@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAL Matrix — Memory Economics Interactive Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --accent2: #f43f5e;
+            --accent3: #10b981;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+        header { max-width: 1200px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        h1 { font-size: 1.6rem; color: var(--accent); }
+        .subtitle { color: var(--muted); font-size: 0.9rem; }
+        .layout { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+        .panel { background: var(--card); border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); border: 1px solid #334155; }
+        .control-group { margin-bottom: 18px; }
+        label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        input[type="range"], select { width: 100%; accent-color: var(--accent); }
+        select { background: #0f172a; color: var(--text); padding: 8px; border: 1px solid #475569; border-radius: 6px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: #0f172a; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: #334155; color: var(--text); }
+        .btn-secondary:hover { background: #475569; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: #0f172a; padding: 14px; border-radius: 8px; border: 1px solid #334155; text-align: center; }
+        .stat-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+        .stat-val { font-size: 1.3rem; font-weight: 800; margin-top: 4px; }
+        .chart-box { background: var(--card); padding: 20px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 20px; height: 360px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-boom { background: #0284c7; color: white; }
+        .badge-amnesia { background: #e11d48; color: white; }
+        .badge-rentier { background: #059669; color: white; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Matrix: Generational Artificial Life</h1>
+            <div class="subtitle">Interactive Memory Economics Simulator (Papers 1, 2, & 3) — Author: Prince T Philip</div>
+        </div>
+        <div id="regime-badge" class="badge badge-rentier">Lamarckian Rentier</div>
+    </header>
+
+    <div class="layout">
+        <!-- Controls Sidebar -->
+        <div class="panel">
+            <h2 style="font-size: 1.1rem; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 8px;">Simulation Parameters</h2>
+            
+            <div class="control-group">
+                <label>Environment Volatility Mode</label>
+                <select id="env-mode" onchange="toggleFreqInput()">
+                    <option value="periodic">Periodic Oscillation</option>
+                    <option value="chaotic">Chaotic Schedule (Fibonacci & Pi)</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="freq-group">
+                <label>Shift Frequency: <span id="val-freq">20</span> gens</label>
+                <input type="range" id="param-freq" min="2" max="100" value="20" oninput="updateLabel('freq')">
+            </div>
+
+            <div class="control-group">
+                <label>Learning Time Penalty Multiplier: <span id="val-penalty">50</span></label>
+                <input type="range" id="param-penalty" min="0" max="150" value="50" oninput="updateLabel('penalty')">
+            </div>
+
+            <div class="control-group">
+                <label>Brain Capacity Upkeep Cost: <span id="val-capcost">0.05</span></label>
+                <input type="range" id="param-capcost" min="0.0" max="0.15" step="0.01" value="0.05" oninput="updateLabel('capcost')">
+            </div>
+
+            <div class="control-group">
+                <label>Generations to Run: <span id="val-gens">300</span></label>
+                <input type="range" id="param-gens" min="50" max="800" step="50" value="300" oninput="updateLabel('gens')">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-primary" id="btn-run" onclick="runSimulation()">▶ Run Simulation</button>
+                <button class="btn-secondary" onclick="resetDefaults()">Reset</button>
+            </div>
+            
+            <div style="margin-top: 25px; font-size: 0.8rem; color: var(--muted); border-top: 1px solid #334155; padding-top: 15px;">
+                <strong>How it works:</strong><br>
+                Agents evolve Retention (f), Learning Rate (lr), and Capacity (c). Observe how shift frequency dynamically flips the population between the Boomerang Strategy, Agile Amnesia, and Lamarckian Rentiers.
+            </div>
+        </div>
+
+        <!-- Visualizer Area -->
+        <div>
+            <!-- Stats Counters -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Mean Retention (f)</div>
+                    <div class="stat-val" id="stat-f" style="color: var(--accent);">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Mean Learning Rate</div>
+                    <div class="stat-val" id="stat-lr" style="color: var(--accent2);">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Mean Capacity</div>
+                    <div class="stat-val" id="stat-cap" style="color: var(--accent3);">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Active Regime</div>
+                    <div class="stat-val" id="stat-regime" style="font-size: 1rem; margin-top: 8px;">Idle</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-box">
+                <canvas id="timeSeriesChart"></canvas>
+            </div>
+
+            <div class="chart-box" style="height: 280px;">
+                <canvas id="infoChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateLabel(id) {
+            document.getElementById('val-' + id).innerText = document.getElementById('param-' + id).value;
+        }
+
+        function toggleFreqInput() {
+            const mode = document.getElementById('env-mode').value;
+            document.getElementById('freq-group').style.display = (mode === 'periodic') ? 'block' : 'none';
+        }
+
+        function resetDefaults() {
+            document.getElementById('param-freq').value = 20;
+            document.getElementById('param-penalty').value = 50;
+            document.getElementById('param-capcost').value = 0.05;
+            document.getElementById('param-gens').value = 300;
+            updateLabel('freq'); updateLabel('penalty'); updateLabel('capcost'); updateLabel('gens');
+            runSimulation();
+        }
+
+        let timeSeriesChart = null;
+        let infoChart = null;
+
+        function initCharts() {
+            const ctx1 = document.getElementById('timeSeriesChart').getContext('2d');
+            timeSeriesChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Retention (f)', borderColor: '#38bdf8', data: [], borderWidth: 2, pointRadius: 0 },
+                        { label: 'Learning Rate (lr * 10)', borderColor: '#f43f5e', data: [], borderWidth: 2, pointRadius: 0 },
+                        { label: 'Capacity (c)', borderColor: '#10b981', data: [], borderWidth: 2, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Generation', color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { title: { display: true, text: 'Trait Value', color: '#94a3b8' }, grid: { color: '#334155' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+
+            const ctx2 = document.getElementById('infoChart').getContext('2d');
+            infoChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: '% Inherited Information', backgroundColor: 'rgba(56, 189, 248, 0.4)', borderColor: '#38bdf8', fill: true, data: [], pointRadius: 0 },
+                        { label: '% Actively Learned', backgroundColor: 'rgba(244, 63, 94, 0.4)', borderColor: '#f43f5e', fill: true, data: [], pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Generation', color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { stacked: true, min: 0, max: 100, title: { display: true, text: 'Memory Provenance (%)', color: '#94a3b8' }, grid: { color: '#334155' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Lightweight browser-native evolutionary model
+        function runSimulation() {
+            const btn = document.getElementById('btn-run');
+            btn.innerText = "Simulating...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const mode = document.getElementById('env-mode').value;
+                const freq = parseInt(document.getElementById('param-freq').value);
+                const penalty = parseFloat(document.getElementById('param-penalty').value);
+                const capCost = parseFloat(document.getElementById('param-capcost').value);
+                const maxGens = parseInt(document.getElementById('param-gens').value);
+
+                // Build shifts
+                const shifts = new Set();
+                if (mode === 'periodic') {
+                    for (let g = freq; g < maxGens; g += freq) shifts.add(g);
+                } else {
+                    const seq = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 3, 1, 4, 1, 5, 9, 2, 6, 5, 3];
+                    let curr = 0;
+                    while (curr < maxGens) {
+                        for (let s of seq) {
+                            curr += s;
+                            if (curr < maxGens) shifts.add(curr);
+                        }
+                    }
+                }
+
+                const popSize = 60;
+                let population = [];
+                for (let i = 0; i < popSize; i++) {
+                    population.push({
+                        f: Math.random(),
+                        lr: 0.01 + Math.random() * 0.08,
+                        cap: 0.5 + Math.random() * 1.5,
+                        skills: { A: 0, B: 0 }
+                    });
+                }
+
+                let currentSkill = 'A';
+                const historyF = [], historyLr = [], historyCap = [], historyInh = [], historyLrn = [], gens = [];
+
+                for (let g = 0; g < maxGens; g++) {
+                    if (shifts.has(g)) currentSkill = (currentSkill === 'A') ? 'B' : 'A';
+
+                    // Evaluate
+                    const evaluated = population.map(p => {
+                        let skillA = p.skills.A * p.f;
+                        let skillB = p.skills.B * p.f;
+                        
+                        // Enforce cap
+                        let total = skillA + skillB;
+                        if (total > p.cap) {
+                            let s = p.cap / total;
+                            skillA *= s; skillB *= s;
+                        }
+
+                        let inheritedBit = (currentSkill === 'A') ? skillA : skillB;
+                        let learnedBit = 0;
+
+                        // Learn
+                        for (let step = 0; step < 10; step++) {
+                            let curTotal = skillA + skillB;
+                            if (curTotal < p.cap) {
+                                if (currentSkill === 'A') skillA += p.lr; else skillB += p.lr;
+                                learnedBit += p.lr;
+                            }
+                        }
+
+                        // Work
+                        const timeCost = Math.floor(p.lr * penalty);
+                        const numTasks = Math.max(1, 30 - timeCost);
+                        let curSkill = (currentSkill === 'A') ? skillA : skillB;
+                        let succ = 0;
+                        for (let t = 0; t < numTasks; t++) {
+                            let pSucc = (curSkill >= 0.4) ? 0.9 : (curSkill / 0.4) * 0.5;
+                            if (Math.random() < pSucc) succ++;
+                        }
+
+                        let efficiency = succ / numTasks;
+                        let productivity = succ / 30.0;
+                        let fitness = (efficiency * 0.5) + (productivity * 0.5) - (p.cap * capCost);
+
+                        return {
+                            f: p.f, lr: p.lr, cap: p.cap,
+                            fitness: Math.max(0, fitness),
+                            skills: { A: skillA, B: skillB },
+                            inheritedBit, learnedBit
+                        };
+                    });
+
+                    // Select top 50%
+                    evaluated.sort((a, b) => b.fitness - a.fitness);
+                    const parents = evaluated.slice(0, popSize / 2);
+
+                    // Track
+                    if (g % 2 === 0 || g === maxGens - 1) {
+                        gens.push(g);
+                        const meanF = evaluated.reduce((acc, a) => acc + a.f, 0) / popSize;
+                        const meanLr = evaluated.reduce((acc, a) => acc + a.lr, 0) / popSize;
+                        const meanCap = evaluated.reduce((acc, a) => acc + a.cap, 0) / popSize;
+                        
+                        historyF.push(meanF);
+                        historyLr.push(meanLr * 10);
+                        historyCap.push(meanCap);
+
+                        let totalInh = evaluated.reduce((acc, a) => acc + a.inheritedBit, 0);
+                        let totalLrn = evaluated.reduce((acc, a) => acc + a.learnedBit, 0);
+                        let tot = totalInh + totalLrn;
+                        historyInh.push(tot > 0 ? (totalInh / tot) * 100 : 0);
+                        historyLrn.push(tot > 0 ? (totalLrn / tot) * 100 : 100);
+                    }
+
+                    // Reproduce
+                    population = [];
+                    while (population.length < popSize) {
+                        let parent = parents[Math.floor(Math.random() * parents.length)];
+                        population.push({
+                            f: Math.max(0, Math.min(1, parent.f + (Math.random() - 0.5) * 0.08)),
+                            lr: Math.max(0.001, Math.min(0.25, parent.lr + (Math.random() - 0.5) * 0.015)),
+                            cap: Math.max(0.1, Math.min(5, parent.cap + (Math.random() - 0.5) * 0.15)),
+                            skills: { ...parent.skills }
+                        });
+                    }
+                }
+
+                // Render Chart Updates
+                timeSeriesChart.data.labels = gens;
+                timeSeriesChart.data.datasets[0].data = historyF;
+                timeSeriesChart.data.datasets[1].data = historyLr;
+                timeSeriesChart.data.datasets[2].data = historyCap;
+                timeSeriesChart.update();
+
+                infoChart.data.labels = gens;
+                infoChart.data.datasets[0].data = historyInh;
+                infoChart.data.datasets[1].data = historyLrn;
+                infoChart.update();
+
+                const finalF = historyF[historyF.length - 1];
+                const finalLr = (historyLr[historyLr.length - 1] / 10);
+                const finalCap = historyCap[historyCap.length - 1];
+
+                document.getElementById('stat-f').innerText = finalF.toFixed(3);
+                document.getElementById('stat-lr').innerText = finalLr.toFixed(3);
+                document.getElementById('stat-cap').innerText = finalCap.toFixed(3);
+
+                // Classify Regime
+                let regime = "Lamarckian Rentier";
+                let badgeClass = "badge-rentier";
+                if (mode === 'periodic' && freq <= 3 && finalCap > 0.9) {
+                    regime = "Boomerang Strategy";
+                    badgeClass = "badge-boom";
+                } else if (finalF < 0.40) {
+                    regime = "Agile Amnesia";
+                    badgeClass = "badge-amnesia";
+                }
+
+                document.getElementById('stat-regime').innerText = regime;
+                const badge = document.getElementById('regime-badge');
+                badge.className = "badge " + badgeClass;
+                badge.innerText = regime;
+
+                btn.innerText = "▶ Run Simulation";
+                btn.disabled = false;
+            }, 50);
+        }
+
+        window.onload = () => {
+            initCharts();
+            runSimulation();
+        };
+    </script>
+</body>
+</html>
