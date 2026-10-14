@@ -1,7 +1,67 @@
 {
-  "mean_accuracy_adaptive": 0.9377777777777777,
-  "mean_accuracy_exact_cloning": 0.9488402777777779,
-  "accuracy_advantage_percent": -1.1062500000000197,
-  "final_evolved_f": 0.9578285960427138,
-  "final_evolved_lr": 0.006986610089855003
+  "Adaptive Lossy (Ours, f=0.45)": {
+    "mean_continual_accuracy": 74.79,
+    "task1_initial_accuracy": 82.29,
+    "task1_final_accuracy": 69.79,
+    "catastrophic_forgetting": 12.5,
+    "task_accuracies": [
+      69.8,
+      76.0,
+      76.0,
+      76.0,
+      76.0
+    ]
+  },
+  "Elastic Weight Consolidation (EWC)": {
+    "mean_continual_accuracy": 83.54,
+    "task1_initial_accuracy": 82.29,
+    "task1_final_accuracy": 73.96,
+    "catastrophic_forgetting": 8.33,
+    "task_accuracies": [
+      74.0,
+      86.5,
+      76.0,
+      85.4,
+      95.8
+    ]
+  },
+  "Experience Replay (ER)": {
+    "mean_continual_accuracy": 83.96,
+    "task1_initial_accuracy": 82.29,
+    "task1_final_accuracy": 73.96,
+    "catastrophic_forgetting": 8.33,
+    "task_accuracies": [
+      74.0,
+      87.5,
+      76.0,
+      86.5,
+      95.8
+    ]
+  },
+  "Naive Sequential Cloning (f=1.0)": {
+    "mean_continual_accuracy": 83.12,
+    "task1_initial_accuracy": 82.29,
+    "task1_final_accuracy": 72.92,
+    "catastrophic_forgetting": 9.38,
+    "task_accuracies": [
+      72.9,
+      85.4,
+      76.0,
+      85.4,
+      95.8
+    ]
+  },
+  "Tabula Rasa / Reset (f=0.0)": {
+    "mean_continual_accuracy": 52.92,
+    "task1_initial_accuracy": 82.29,
+    "task1_final_accuracy": 53.12,
+    "catastrophic_forgetting": 29.17,
+    "task_accuracies": [
+      53.1,
+      59.4,
+      25.0,
+      51.0,
+      76.0
+    ]
+  }
 }

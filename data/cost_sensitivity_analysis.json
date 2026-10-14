@@ -1,0 +1,67 @@
+{
+  "alpha_sweep": {
+    "0.01": {
+      "f_volatile": 0.7698184658401853,
+      "f_stable": 0.8210485908724661,
+      "phase_preserved": false
+    },
+    "0.03": {
+      "f_volatile": 0.26497186808232565,
+      "f_stable": 0.8328845297716921,
+      "phase_preserved": true
+    },
+    "0.05": {
+      "f_volatile": 0.2154323660310562,
+      "f_stable": 0.8152223601560675,
+      "phase_preserved": true
+    },
+    "0.1": {
+      "f_volatile": 0.1995382778425184,
+      "f_stable": 0.8513445331549312,
+      "phase_preserved": true
+    },
+    "0.15": {
+      "f_volatile": 0.14063818671883677,
+      "f_stable": 0.7866886291437133,
+      "phase_preserved": true
+    }
+  },
+  "beta_sweep": {
+    "20.0": {
+      "f_volatile": 0.1353576027457663,
+      "f_stable": 0.8382860710195598,
+      "phase_preserved": true
+    },
+    "50.0": {
+      "f_volatile": 0.24283986925072867,
+      "f_stable": 0.7359743195338517,
+      "phase_preserved": true
+    },
+    "80.0": {
+      "f_volatile": 0.3201404870035705,
+      "f_stable": 0.8946414929848941,
+      "phase_preserved": true
+    }
+  },
+  "functional_form_sweep": {
+    "linear": {
+      "f_volatile": 0.3151167341280028,
+      "f_stable": 0.8054940628250243,
+      "delta_retention": 0.49037732869702155,
+      "phase_preserved": true
+    },
+    "quadratic": {
+      "f_volatile": 0.158797162267102,
+      "f_stable": 0.7294346142239886,
+      "delta_retention": 0.5706374519568866,
+      "phase_preserved": true
+    },
+    "sublinear": {
+      "f_volatile": 0.8724728556668461,
+      "f_stable": 0.7781878910491968,
+      "delta_retention": -0.09428496461764924,
+      "phase_preserved": false
+    }
+  },
+  "phase_invariance_verified": false
+}

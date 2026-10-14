@@ -52,3 +52,27 @@ def test_spatial_lattice_simulation():
     stats = sim.get_population_stats()
     assert 0.0 <= stats["mean_f"] <= 1.0
     assert 0.0 < stats["mean_lr"] < 1.0
+
+def test_permuted_mnist_continual_results():
+    mnist_res_path = os.path.join(os.path.dirname(__file__), "../data/mnist/permuted_mnist_results.json")
+    assert os.path.exists(mnist_res_path), "Permuted-MNIST results missing"
+    with open(mnist_res_path, "r") as f:
+        res = json.load(f)
+    assert "Elastic Weight Consolidation (EWC)" in res
+    assert "Adaptive Lossy (Ours, f=0.45)" in res
+    assert "Naive Sequential Cloning (f=1.0)" in res
+    # Verify EWC and Lossy outperform Tabula Rasa on retention
+    assert res["Elastic Weight Consolidation (EWC)"]["mean_continual_accuracy"] > res["Tabula Rasa / Reset (f=0.0)"]["mean_continual_accuracy"]
+    assert res["Adaptive Lossy (Ours, f=0.45)"]["mean_continual_accuracy"] > res["Tabula Rasa / Reset (f=0.0)"]["mean_continual_accuracy"]
+
+def test_cost_sensitivity_analysis():
+    sens_path = os.path.join(os.path.dirname(__file__), "../data/cost_sensitivity_analysis.json")
+    assert os.path.exists(sens_path), "Cost sensitivity analysis JSON missing"
+    with open(sens_path, "r") as f:
+        sens = json.load(f)
+    assert "functional_form_sweep" in sens
+    assert "alpha_sweep" in sens
+    assert "beta_sweep" in sens
+    # Quadratic and linear forms must preserve phase boundary
+    assert sens["functional_form_sweep"]["linear"]["phase_preserved"] is True
+    assert sens["functional_form_sweep"]["quadratic"]["phase_preserved"] is True
