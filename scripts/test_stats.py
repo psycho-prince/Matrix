@@ -1,11 +1,19 @@
-import json, glob, numpy as np, sys
+import json, glob, numpy as np, sys, os
 from scipy import stats
 
-b_files = sorted(glob.glob("results/raw/mode_B-copy_seed_*.json"))
-c_files = sorted(glob.glob("results/raw/mode_C-full_seed_*.json"))
+data_dir = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "../data/results")
+raw_dir = os.path.join(data_dir, "raw") if not data_dir.endswith("raw") else data_dir
+
+b_files = sorted(glob.glob(os.path.join(raw_dir, "mode_B-copy_seed_*.json")))
+c_files = sorted(glob.glob(os.path.join(raw_dir, "mode_C-full_seed_*.json")))
 
 if not b_files or not c_files:
-    print("Error: No data files found in results/raw/")
+    # fallback to local results/raw
+    b_files = sorted(glob.glob("results/raw/mode_B-copy_seed_*.json"))
+    c_files = sorted(glob.glob("results/raw/mode_C-full_seed_*.json"))
+
+if not b_files or not c_files:
+    print(f"Error: No data files found in {raw_dir} or results/raw/")
     sys.exit(1)
 
 b_gen10 = []

@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import csv
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+# Ensure repository root is on sys.path
+repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
 
 from gal.agents.agent import Agent
 from gal.environment.world import Environment

@@ -8,4 +8,6 @@ venv/
 gal_simulation_results/
 test_results_final/
 test_run/
+results/
 test_run_fixed/
+data/test_run_fixed/
