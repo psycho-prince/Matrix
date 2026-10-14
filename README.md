@@ -7,12 +7,15 @@ This repository contains the codebase, empirical simulations, and peer-reviewed 
 
 ---
 
-## 🌟 Interactive Web Dashboard (Option 4)
-Run the browser simulator to interactively explore memory economics and phase boundaries:
+## 🌟 Interactive Web Dashboard (Live on GitHub Pages)
+Play with the live simulator directly in your browser:
+👉 **[https://psycho-prince.github.io/Matrix/](https://psycho-prince.github.io/Matrix/)**
+
+Or run locally via Python:
 ```bash
 python3 web_dashboard/serve.py
 ```
-Then navigate to `http://localhost:8080` in your web browser. Features live parameter sliders for shift frequencies, metabolic costs, and real-time generation plots.
+Navigate to `http://localhost:8080`. Features live parameter sliders for shift frequencies, metabolic costs, and real-time generation plots.
 
 ---
 
