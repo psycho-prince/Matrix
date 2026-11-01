@@ -39,3 +39,6 @@ jobs:
 
       - name: Run repository test suite
         run: python -m pytest -q tests/
+
+      - name: Validate committed paired-seed results
+        run: python analysis/independent_validation.py
