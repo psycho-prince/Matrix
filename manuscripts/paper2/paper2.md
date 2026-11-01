@@ -1,48 +1,54 @@
 ---
-title: "The Capacity-Saturation Trap: Why Lossy Transmission is Required for Cumulative Inheritance in Volatile Environments"
-author: "GAL Research"
-date: "October 2026"
+title: "The Capacity-Saturation Trap: A Reassessment of Lossy and Exact Inheritance"
+author: "Prince T Philip"
+date: "October 2026; reassessed November 2, 2026"
 abstract: |
-  In evolutionary computation and artificial life simulations, exact (Lamarckian) weight transfer often accelerates adaptation. However, biological and cultural systems typically rely on "lossy" transmission mechanisms, such as teaching, which introduce error. We hypothesize that when an agent's memory capacity is strictly bounded, exact inheritance becomes a catastrophic liability in shifting environments. Using a minimalist Generational Artificial Life (GAL) simulation, we map the exact phase boundary where exact copying fails. We demonstrate that while exact copying excels in perfectly stable or high-capacity environments, lossy transmission acts as a vital mathematical regularizer—clearing obsolete memory to prevent capacity saturation. Our independent 100-seed permutation tests confirm that lossy transmission outperforms exact copying by +85.4% ($p < 10^{-5}$) under strict capacity constraints when the environment shifts every 10 generations.
+  This manuscript investigates whether lossy generational transmission can act as a regularizer under bounded memory and changing environments. A consistency audit of the committed repository artifacts found that the earlier claim that lossy transmission outperformed exact copying by +85.4% is not supported by the currently committed 100-seed raw results. The committed summary instead reports a Generation-10 task-success rate of 0.8842 for exact B-copy and 0.8473 for C-full iterative teaching. The earlier phase table and p-value claim should therefore not be treated as validated until the experiment is rerun from a clean checkout and the raw data, analysis, and manuscript are reconciled. The present evidence is model-specific and does not establish that lossy inheritance is generally superior.
 ---
 
-# 1. Introduction
+# 1. Research question
 
-The tension between retaining old knowledge (stability) and acquiring new knowledge (plasticity) is a central problem in both continual learning and cultural evolution. In continual machine learning, models forced to learn sequential tasks often overwrite prior weights, a phenomenon known as catastrophic forgetting. Conversely, in cultural evolution, cumulative inheritance relies on the high-fidelity transmission of complex skills across generations.
+The study asks how exact inheritance and iterative, lossy teaching compare when agents learn under a bounded memory model and environmental conditions can change. The hypothesis that lossiness is beneficial is a testable hypothesis, not an established result.
 
-In digital simulations, it is common to implement exact "Lamarckian" inheritance—cloning the parent's learned weights directly into the offspring. While this provides rapid adaptation in static environments, it bypasses the "lossy" nature of biological and cultural transmission. This paper investigates whether transmission error (lossiness) is not merely noise, but a required regularizer that prevents long-term lineages from collapsing under their own accumulated memory.
+# 2. Methods represented in the repository
 
-# 2. Methods
+The core GAL implementation defines:
+- **B-copy:** exact copying of the parent's skill values and semantic concepts.
+- **C-full:** three stochastic correction steps toward the parent's skill value, with inherited semantic concepts.
+- **A:** no inherited skills or concepts.
 
-We utilized a Generational Artificial Life (GAL) simulation. Agents learn active survival skills (`A` or `B`) over a lifetime of 10 steps. We enforce a **Memory Capacity** limit, meaning the sum of an agent's acquired skills cannot exceed a defined threshold. If the limit is reached, acquiring new skills proportionally degrades old ones. 
+The correction procedure is a particular algorithmic treatment. It should not be described as a general model of biological or cultural teaching without additional evidence.
 
-We varied the **Environmental Volatility** (Switch Frequency), shifting the active survival skill from `A` to `B` every $N$ generations. We evaluated two modes of inheritance across 100 independent seeds:
-*   **Exact Copying:** The offspring clones 100% of the parent's final weights.
-*   **Lossy Teaching:** The offspring inherits only 50% of the parent's final weights.
+# 3. Committed result audit
 
-# 3. Results: The Phase Boundary
+The committed `data/results/processed/summary.csv` reports the following Generation-10 mean task-success rates:
 
-Our parameter sweep mapping Memory Capacity against Environmental Volatility revealed a distinct phase transition.
+| Condition | Generation-10 mean |
+|---|---:|
+| A | 0.0413 |
+| B-copy | 0.8842 |
+| C-full | 0.8473 |
+| C-no-memory | 0.8160 |
+| C-low-effort | 0.3660 |
 
-| Memory Capacity | Shift every 1 gen | Shift every 2 gens | Shift every 5 gens | Shift every 10 gens | Stable (No shift) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **0.5** | +0.067 | +0.274 | +0.308 | **+0.832** | 0.000 |
-| **1.0** | +0.146 | +0.298 | +0.373 | **+0.854** | 0.000 |
-| **2.0** | 0.000 | 0.000 | +0.370 | **+0.854** | 0.000 |
+For the committed summary, B-copy exceeds C-full by 0.0369 (3.69 percentage points). This directly contradicts the previous manuscript statement that lossy teaching outperformed exact copying by +85.4%.
 
-*(Table 1: Mean difference in task success rate: `Lossy - Exact`. Positive values indicate Lossy teaching superiority).*
+The repository also contains 100 raw seed files per condition for B-copy and C-full. The analysis script must be run against those exact committed files, with seed pairing verified and the test direction stated explicitly, before a new inferential result is reported.
 
-### 3.1 The Capacity-Saturation Trap
-When the environment shifts every 10 generations, an exact-copying lineage maximizes its current skill, eventually saturating its entire memory capacity. When the environment abruptly shifts from `A` to `B`, the offspring inherits a fully saturated memory of obsolete skill `A`. It is unable to learn `B` without catastrophic interference, resulting in a mean task success rate of 0.00%.
+# 4. Interpretation and limitations
 
-### 3.2 Lossy Transmission as a Regularizer
-In the identical scenario, the Lossy lineage drops 50% of the inherited weight. This deliberate transmission error frees up memory capacity, allowing the offspring to rapidly adapt to the new environment. An independent sign-flip permutation test ($100,000$ permutations) confirms the difference is highly significant: Lossy teaching outperforms Exact copying by a mean difference of +0.854 ($p_{\mathrm{MC}} \approx 10^{-5}$).
+The current committed results do not support the claim that C-full outperforms B-copy under the represented run. They also do not establish that exact copying is universally better. The outcome is conditional on the implementation, fitness function, environment schedule, and selected parameters.
 
-# 4. Discussion
+The earlier table claiming a +0.854 lossy advantage, the statement that exact copying yields zero success after a shift, and the associated one-sided permutation-test claim are withdrawn pending a traceable reproduction. Do not cite those claims as established findings.
 
-Our findings provide a mechanistic explanation for why exact cloning is dangerous in the real world. Exact inheritance is only mathematically optimal if (1) the environment never changes, or (2) the agent possesses a memory capacity large enough to hold all possible future skills simultaneously. 
+This experiment is a stylized two-skill agent simulation. It is not evidence that the same mechanism solves catastrophic forgetting in modern neural networks.
 
-Because biological organisms and human cultures operate under bounded neural capacity and volatile environments, "imperfect" teaching acts as a crucial garbage-collection mechanism. It prevents lineages from overfitting to a single epoch, ensuring enough plasticity remains to survive the next environmental shift.
+# 5. Reproducibility requirements
 
-# 5. Conclusion
-Under the tested simulation constraints, lossy transmission is a mathematical prerequisite for long-term adaptation in volatile environments. Future work should investigate how these boundaries shift under different network architectures or selective inheritance mechanisms.
+Before publication:
+1. Run the analysis from the repository root using the committed `data/results/raw/` files.
+2. Verify the 100 paired seed identifiers and compute the effect direction from raw observations.
+3. Re-run the simulation from a clean environment and compare generated outputs with the committed artifacts.
+4. Publish exact configuration, code revision, raw outputs, and analysis.
+5. Update the compiled PDF so it matches this corrected source.
+
