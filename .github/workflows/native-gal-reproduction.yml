@@ -1,6 +1,11 @@
 name: Native GAL Reproduction
 
 on:
+  push:
+    branches: [ "research/gal-native-reproduction" ]
+    paths:
+      - "experiments/07_native_gal_reproduction/**"
+      - ".github/workflows/native-gal-reproduction.yml"
   workflow_dispatch:
     inputs:
       seeds:
