@@ -1,6 +1,11 @@
 name: Split Digits Continual Learning Smoke Benchmark
 
 on:
+  push:
+    branches: ["research/gal-native-reproduction"]
+    paths:
+      - "experiments/09_split_digits/**"
+      - ".github/workflows/split-digits-benchmark.yml"
   workflow_dispatch:
     inputs:
       seeds:
