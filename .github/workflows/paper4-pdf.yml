@@ -1,0 +1,33 @@
+name: Build corrected Paper 4 PDF
+
+on:
+  push:
+    branches: [ "research/canonical-split-mnist-baselines" ]
+    paths:
+      - "manuscripts/paper4/paper4.tex"
+      - ".github/workflows/paper4-pdf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-recommended texlive-latex-extra
+      - name: Compile corrected Paper 4 source
+        working-directory: manuscripts/paper4
+        run: |
+          pdflatex -interaction=nonstopmode -halt-on-error paper4.tex
+          pdflatex -interaction=nonstopmode -halt-on-error paper4.tex
+      - name: Upload draft PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: corrected-paper4-protocol-pdf
+          path: manuscripts/paper4/paper4.pdf
+          if-no-files-found: error
