@@ -6,7 +6,7 @@ Status: protocol and published-baseline audit only. No GAL-on-Fashion-MNIST resu
 
 - Dataset/repository: https://github.com/tachyonicClock/cldd
 - Dataset DOI: https://doi.org/10.5281/zenodo.21232615
-- Official task stream: RotatedFashionMNISTPT, using the archived `rotated_fashion_mnist_data.pt`
+- Official task stream: RotatedFashionMNISTPT, which expects `data/rotated_fashion_mnist_data.pt`; this raw tensor file is not included in the public CLDD Parquet archive and has not yet been located. See [DATA_ACQUISITION.md](DATA_ACQUISITION.md).
 - Official learner implementations: FT, EWC, SI in the CLDD repository (CapyMOA 0.15.1)
 - Model: FashionCNN
 - Drift conditions: abrupt, gradual, slow
