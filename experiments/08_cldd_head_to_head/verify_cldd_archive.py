@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Verify the upstream CLDD dataset archive without training any models."""
+"""Verify the published CLDD benchmark archive (not the raw image task tensors)."""
 from __future__ import annotations
 import hashlib, json, sys, zipfile
 from pathlib import Path
 
 archive = Path(sys.argv[1])
 if not archive.is_file() or archive.stat().st_size == 0:
-    raise SystemExit("Dataset archive missing or empty")
+    raise SystemExit("CLDD archive missing or empty")
 
 sha = hashlib.sha256()
 with archive.open("rb") as f:
@@ -21,18 +21,22 @@ with zipfile.ZipFile(archive) as zf:
         {"name": i.filename, "size": i.file_size, "compressed_size": i.compress_size}
         for i in zf.infolist() if not i.is_dir()
     ]
-    names = [e["name"].lower() for e in entries]
-    fashion = [n for n in names if "rotated_fashion_mnist_data.pt" in n]
-    if not fashion:
-        raise SystemExit("Expected rotated_fashion_mnist_data.pt not found in archive")
+    names = [Path(e["name"]).name.lower() for e in entries]
+    parquet = [n for n in names if n in {"cldd_a.parquet", "cldd_b.parquet"}]
+    if not parquet:
+        raise SystemExit(
+            "No CLDD_A.parquet or CLDD_B.parquet found. "
+            "This archive is the published benchmark dataset, not the raw Fashion-MNIST tensors."
+        )
     report = {
         "archive": archive.name,
         "bytes": archive.stat().st_size,
         "sha256": sha.hexdigest(),
         "zip_crc": "passed",
-        "fashion_mnist_tensor_archive": fashion,
+        "benchmark_parquet_files": parquet,
         "entry_count": len(entries),
         "entries": entries,
+        "note": "CLDD parquet contains recorded benchmark streams/results; it is not the raw rotated Fashion-MNIST training tensor archive."
     }
     Path("cldd_archive_manifest.json").write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
