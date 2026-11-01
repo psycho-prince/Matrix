@@ -1,0 +1,46 @@
+name: Native GAL Reproduction
+
+on:
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: "Number of paired universe seeds"
+        required: false
+        default: "100"
+      agents:
+        description: "Agents per generation"
+        required: false
+        default: "100"
+      generations:
+        description: "Generations"
+        required: false
+        default: "10"
+
+permissions:
+  contents: read
+
+jobs:
+  native-gal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy
+      - name: Run original GAL implementation
+        run: |
+          python experiments/07_native_gal_reproduction/run_native_gal.py \
+            --seeds "${{ github.event.inputs.seeds || '100' }}" \
+            --agents "${{ github.event.inputs.agents || '100' }}" \
+            --generations "${{ github.event.inputs.generations || '10' }}"
+      - name: Upload native GAL raw data and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-gal-original-model-results
+          path: artifacts/native_gal/
+          if-no-files-found: error
