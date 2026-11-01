@@ -1,0 +1,40 @@
+name: CLDD Dataset Acquisition Audit
+
+on:
+  push:
+    branches: ["research/gal-native-reproduction"]
+    paths:
+      - "experiments/08_cldd_head_to_head/**"
+      - ".github/workflows/cldd-dataset-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download upstream CLDD archive
+        run: |
+          curl --fail --location --retry 3 --retry-delay 5 \
+            "https://pub-69d9a50abcb04461bc0b8f04d7a47656.r2.dev/cldd_dataset.zip" \
+            --output cldd_dataset.zip
+          ls -lh cldd_dataset.zip
+      - name: Verify archive integrity and expected Fashion-MNIST tensor data
+        run: |
+          python experiments/08_cldd_head_to_head/verify_cldd_archive.py cldd_dataset.zip
+      - name: Upload verified dataset and manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: cldd-verified-dataset
+          path: |
+            cldd_dataset.zip
+            cldd_archive_manifest.json
+          if-no-files-found: error
+          retention-days: 14
