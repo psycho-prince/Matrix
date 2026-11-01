@@ -1,0 +1,41 @@
+name: Python Quality Gates
+
+on:
+  push:
+    branches: ["main", "ci/**"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Compile and test (Python 3.11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy scipy matplotlib pytest
+
+      - name: Compile Python modules
+        run: python -m compileall -q gal experiments analysis tests
+
+      - name: Run repository test suite
+        run: python -m pytest -q
