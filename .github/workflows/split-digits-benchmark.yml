@@ -30,12 +30,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: python -m pip install --upgrade pip torch scikit-learn numpy
+        run: python -m pip install --upgrade pip scikit-learn numpy
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run deterministic benchmark
         run: |
           python experiments/09_split_digits/run_benchmark.py \
-            --seeds "${{ inputs.seeds }}" \
-            --epochs "${{ inputs.epochs }}"
+            --seeds "${{ inputs.seeds || '3' }}" \
+            --epochs "${{ inputs.epochs || '8' }}"
       - uses: actions/upload-artifact@v4
         with:
           name: split-digits-results
