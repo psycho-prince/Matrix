@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Verified Data Hash](https://img.shields.io/badge/SHA--256-Audit_Verified-success)](data/cryptographic_validation_audit.json)
 
-This repository contains the codebase, empirical simulations, and peer-reviewed manuscripts for the **Generational Artificial Life (GAL)** research framework.
+This repository contains the codebase, empirical simulations, and research manuscripts/preprints for the **Generational Artificial Life (GAL)** research framework.
 
 **Author:** Prince T Philip (`princephilip514@gmail.com`)  
 **Date:** October 2026
