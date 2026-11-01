@@ -38,4 +38,4 @@ jobs:
         run: python -m compileall -q gal experiments analysis tests
 
       - name: Run repository test suite
-        run: python -m pytest -q
+        run: python -m pytest -q tests/
