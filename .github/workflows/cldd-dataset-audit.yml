@@ -26,7 +26,7 @@ jobs:
             "https://pub-69d9a50abcb04461bc0b8f04d7a47656.r2.dev/cldd_dataset.zip" \
             --output cldd_dataset.zip
           ls -lh cldd_dataset.zip
-      - name: Verify archive integrity and expected Fashion-MNIST tensor data
+      - name: Verify published CLDD parquet archive integrity
         run: |
           python experiments/08_cldd_head_to_head/verify_cldd_archive.py cldd_dataset.zip
       - name: Upload verified dataset and manifest
