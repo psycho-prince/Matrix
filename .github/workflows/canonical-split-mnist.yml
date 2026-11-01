@@ -1,8 +1,6 @@
 name: Canonical Split-MNIST Research Benchmark
 
 on:
-  push:
-    branches: [ "research/canonical-split-mnist-baselines" ]
   workflow_dispatch:
     inputs:
       seeds:
@@ -16,6 +14,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: canonical-split-mnist-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   split-mnist:
