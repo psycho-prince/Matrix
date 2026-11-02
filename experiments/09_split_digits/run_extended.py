@@ -169,9 +169,9 @@ def run_method(method,seed,epochs,memory=0,ewc_strength=0.0):
     for ti,task in enumerate(TASKS):
         mask=torch.isin(ytr,torch.tensor(task))
         tx,ty=xtr[mask],ytr[mask]
-            if method=="GAL-CL" and ti>0:
+        if method == "GAL-CL" and ti > 0:
             apply_gal_inheritance(model, fisher, GAL_KEEP)
-            opt=torch.optim.Adam(model.parameters(),lr=1e-3)
+            opt = torch.optim.Adam(model.parameters(), lr=1e-3)
         replay=None
         if method.startswith("ER") and memory_x:
             replay=(torch.cat(memory_x),torch.cat(memory_y))
