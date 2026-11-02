@@ -58,3 +58,15 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Never overwrite raw artifacts or dated audit reports.
 - Preserve failed runs and explain why they failed.
 - No result is scientific evidence for foundational GAL unless it comes from the original GAL population/environment mechanisms and the pre-specified protocol.
+
+
+### CI failure and correction — 2026-11-02
+- First automated test attempt failed before tests ran because the EWC refactor introduced an indentation error in the GAL-CL branch of `run_extended.py`.
+- Failed CI run: `41427149216`; job `125216400859`.
+- Exact failure: `IndentationError: unexpected indent` at the `if method == "GAL-CL"` branch.
+- The separate pre-existing deterministic benchmark workflow completed successfully: run `41427149177`. This did not validate the new EWC/test changes.
+- Corrected indentation in commit `098edbc3f4bfa8c0bf70e303a922b0b17cad51e9`.
+- New CI checks triggered for the correction:
+  - invariant-test + extended study: run `41427307866`, queued at time of this entry.
+  - deterministic benchmark: run `41427307788`, queued at time of this entry.
+- This failure is retained in the record. Do not report the invariant suite as passing until run `41427307866` completes successfully.
