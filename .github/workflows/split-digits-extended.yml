@@ -1,0 +1,48 @@
+name: Extended Split Digits Continual Learning Study
+on:
+  push:
+    branches: ["research/gal-native-reproduction"]
+    paths:
+      - "experiments/09_split_digits/**"
+      - ".github/workflows/split-digits-extended.yml"
+  workflow_dispatch:
+    inputs:
+      eval_seeds:
+        description: "Held-out evaluation seeds (20-30)"
+        required: true
+        default: "20"
+      tune_seeds:
+        description: "Separate EWC tuning seeds"
+        required: true
+        default: "10"
+      epochs:
+        description: "Epochs per task"
+        required: true
+        default: "8"
+permissions:
+  contents: read
+jobs:
+  extended:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install --upgrade pip numpy scikit-learn
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Run held-out multi-seed study
+        run: |
+          python experiments/09_split_digits/run_extended.py \
+            --tune-seeds "${{ inputs.tune_seeds || '10' }}" \
+            --eval-seeds "${{ inputs.eval_seeds || '20' }}" \
+            --epochs "${{ inputs.epochs || '8' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: split-digits-extended-results
+          path: experiments/09_split_digits/results_extended.json
+          if-no-files-found: error
+          retention-days: 90
