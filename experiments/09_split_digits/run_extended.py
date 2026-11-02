@@ -15,7 +15,6 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 
@@ -86,13 +85,12 @@ def fit_task(model,tx,ty,opt,seed,ewc=None,replay=None,steps=None):
         opt.zero_grad(set_to_none=True)
         loss=nn.functional.cross_entropy(model(xb),yb)
         if ewc is not None:
-            f,means,strength=ewc
-            penalty=sum((f[n]*(p-means[n]).square()).sum() for n,p in model.named_parameters())
-            loss=loss+(strength/2)*penalty
+            constraints, strength = ewc
+            loss = loss + (strength / 2.0) * ewc_penalty(model, constraints)
         loss.backward(); opt.step()
     return nsteps
 
-def apply_gal_inheritance(model,fisher,keep=GAL_KEEP,seed=0):
+def apply_gal_inheritance(model, fisher, keep=GAL_KEEP):
     """GAL-CL selective inheritance: preserve top-importance 70% scalar weights.
 
     A child starts as a clone of its parent. Fisher importance ranks parameter
@@ -101,7 +99,6 @@ def apply_gal_inheritance(model,fisher,keep=GAL_KEEP,seed=0):
     No replay examples are retained. This is an explicit neural operationalization
     of selective generational inheritance, not native symbolic GAL.
     """
-    params=[p for p in model.parameters()]
     scores=torch.cat([fisher[n].detach().flatten().cpu() for n,p in model.named_parameters()])
     n_keep=max(1,int(keep*scores.numel()))
     selected=torch.zeros(scores.numel(),dtype=torch.bool)
@@ -118,8 +115,48 @@ def apply_gal_inheritance(model,fisher,keep=GAL_KEEP,seed=0):
                 fresh=torch.zeros_like(p)
             p.copy_(torch.where(mask,p,fresh))
 
-def evaluate_task_matrix(model,x,y):
-    return [accuracy(model,x[torch.isin(y,torch.tensor(task))],y[torch.isin(y,torch.tensor(task))]) for task in TASKS]
+def task_mask(labels: torch.Tensor, classes: tuple[int, ...]) -> torch.Tensor:
+    """Return a boolean mask for exactly the requested class labels."""
+    return torch.isin(labels, torch.tensor(classes, dtype=labels.dtype, device=labels.device))
+
+
+def evaluate_task_matrix(model, x, y, tasks=TASKS):
+    """Evaluate every task's classes on the same held-out test partition."""
+    scores = []
+    for task in tasks:
+        mask = task_mask(y, task)
+        if not bool(mask.any()):
+            raise ValueError(f"Test partition contains no examples for task {task}")
+        scores.append(accuracy(model, x[mask], y[mask]))
+    return scores
+
+
+def calculate_forgetting(task_matrix):
+    """For each task, max post-learning accuracy minus final accuracy."""
+    if not task_matrix or any(len(row) != len(task_matrix) for row in task_matrix):
+        raise ValueError("task_matrix must be a non-empty square task-by-evaluation matrix")
+    n_tasks = len(task_matrix)
+    forgetting = []
+    for task_index in range(n_tasks):
+        best_after_learning = max(
+            task_matrix[evaluation_index][task_index]
+            for evaluation_index in range(task_index, n_tasks)
+        )
+        final_accuracy = task_matrix[-1][task_index]
+        forgetting.append(best_after_learning - final_accuracy)
+    return forgetting
+
+
+def ewc_penalty(model, task_constraints):
+    """Sum task-specific diagonal-Fisher penalties around each task's own optimum."""
+    penalty = torch.zeros((), device=next(model.parameters()).device)
+    params = dict(model.named_parameters())
+    for fisher, reference in task_constraints:
+        if fisher.keys() != params.keys() or reference.keys() != params.keys():
+            raise ValueError("EWC constraint parameter names do not match model")
+        for name, parameter in params.items():
+            penalty = penalty + (fisher[name] * (parameter - reference[name]).square()).sum()
+    return penalty
 
 def run_method(method,seed,epochs,memory=0,ewc_strength=0.0):
     seed_all(seed)
@@ -127,35 +164,41 @@ def run_method(method,seed,epochs,memory=0,ewc_strength=0.0):
     model=MLP()
     opt=torch.optim.Adam(model.parameters(),lr=1e-3)
     fisher={n:torch.zeros_like(p) for n,p in model.named_parameters()}
-    means={n:p.detach().clone() for n,p in model.named_parameters()}
+    ewc_constraints=[]
     task_matrix=[]; steps=[]; memory_x=[]; memory_y=[]
     for ti,task in enumerate(TASKS):
         mask=torch.isin(ytr,torch.tensor(task))
         tx,ty=xtr[mask],ytr[mask]
-        loader_steps=int(np.ceil(len(ty)/BATCH))*epochs
-        if method=="GAL-CL" and ti>0:
-            apply_gal_inheritance(model,fisher,GAL_KEEP,seed*10+ti)
+            if method=="GAL-CL" and ti>0:
+            apply_gal_inheritance(model, fisher, GAL_KEEP)
             opt=torch.optim.Adam(model.parameters(),lr=1e-3)
         replay=None
         if method.startswith("ER") and memory_x:
             replay=(torch.cat(memory_x),torch.cat(memory_y))
-        ewc=(fisher,means,ewc_strength) if method=="EWC" and ti>0 else None
+        ewc=(ewc_constraints,ewc_strength) if method=="EWC" and ewc_constraints else None
         n=0
         for ep in range(epochs):
             n+=fit_task(model,tx,ty,opt,seed*100+ti*10+ep,ewc,replay,steps=int(np.ceil(len(ty)/BATCH)))
         steps.append(n)
-        if method in ("EWC","GAL-CL"):
-            fnew=fisher_diag(model,tx,ty)
-            for name in fisher: fisher[name]+=fnew[name]
-            means={n:p.detach().clone() for n,p in model.named_parameters()}
+        if method in ("EWC", "GAL-CL"):
+            fnew = fisher_diag(model, tx, ty)
+            if method == "EWC":
+                # Keep each task's Fisher and parameter optimum paired.
+                ewc_constraints.append((
+                    {name: value.detach().clone() for name, value in fnew.items()},
+                    {name: parameter.detach().clone()
+                     for name, parameter in model.named_parameters()},
+                ))
+            for name in fisher:
+                fisher[name] += fnew[name]
         if method.startswith("ER"):
             mx,my=make_memory(tx,ty,memory,seed+ti)
             memory_x.append(mx); memory_y.append(my)
         task_matrix.append(evaluate_task_matrix(model,xt,yt))
     final=accuracy(model,xt,yt)
     per_class={str(c):accuracy(model,xt[yt==c],yt[yt==c]) for c in range(10)}
-    task_final=[row[i] for i,row in enumerate(task_matrix)]
-    forgetting=[max(row[i] for row in task_matrix[i:])-task_matrix[-1][i] for i in range(len(TASKS))]
+    task_final=[task_matrix[i][i] for i in range(len(TASKS))]
+    forgetting=calculate_forgetting(task_matrix)
     return {"method":method,"seed":seed,"final_accuracy":final,
             "accuracy_after_each_task":task_matrix,"final_seen_task_accuracy":task_final,
             "forgetting_per_task":forgetting,"mean_forgetting":float(np.mean(forgetting)),
@@ -169,16 +212,18 @@ def tune_ewc(seeds,epochs):
             seed_all(seed)
             (xtr,ytr),(xv,yv),_=split_data(seed)
             model=MLP(); opt=torch.optim.Adam(model.parameters(),lr=1e-3)
-            fisher={n:torch.zeros_like(p) for n,p in model.named_parameters()}
-            means={n:p.detach().clone() for n,p in model.named_parameters()}
+            ewc_constraints=[]
             for ti,task in enumerate(TASKS):
                 m=torch.isin(ytr,torch.tensor(task)); tx,ty=xtr[m],ytr[m]
                 for ep in range(epochs):
-                    fit_task(model,tx,ty,opt,seed*100+ti*10+ep,
-                             (fisher,means,lam) if ti>0 else None)
-                f=fisher_diag(model,tx,ty)
-                for n in fisher: fisher[n]+=f[n]
-                means={n:p.detach().clone() for n,p in model.named_parameters()}
+                    fit_task(model, tx, ty, opt, seed*100+ti*10+ep,
+                             (ewc_constraints, lam) if ewc_constraints else None)
+                f = fisher_diag(model, tx, ty)
+                ewc_constraints.append((
+                    {name: value.detach().clone() for name, value in f.items()},
+                    {name: parameter.detach().clone()
+                     for name, parameter in model.named_parameters()},
+                ))
             scores[lam].append(accuracy(model,xv,yv))
     means={str(k):float(np.mean(v)) for k,v in scores.items()}
     best=max(EWC_GRID,key=lambda k:np.mean(scores[k]))
@@ -205,7 +250,8 @@ def main():
     ap.add_argument("--epochs",type=int,default=8)
     ap.add_argument("--out",default="experiments/09_split_digits/results_extended.json")
     a=ap.parse_args()
-    if a.tune_seeds<2 or a.eval_seeds<2: raise SystemExit("Use at least 2 tuning and evaluation seeds")
+    if a.tune_seeds < 2 or a.eval_seeds < 2 or a.epochs < 1:
+        raise SystemExit("Use at least 2 tuning and evaluation seeds, and at least 1 epoch")
     start=time.time()
     tune_ids=list(range(a.tune_seeds))
     eval_ids=list(range(1000,1000+a.eval_seeds))
