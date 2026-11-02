@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install numpy scipy
+          python -m pip install numpy scipy scikit-learn
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Run automated inheritance and metric tests
         run: python -m unittest discover -s experiments/09_split_digits/tests -v
