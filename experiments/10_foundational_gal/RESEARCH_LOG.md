@@ -126,3 +126,23 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - These are pilot-scale descriptive outcomes only (5 seeds, 20 agents, 4 generations); no confirmatory inference or hypothesis claim is made from them.
 - Artifact structural audit command executed against downloaded ZIP; checks returned 25 files, 100 generation records, 2,000 agent snapshots, 1,500 inheritance events, and zero validation errors.
 - Gate decision: pilot mechanism and data-capture checks passed. The pre-registered 100-seed × 100-agent × 10-generation confirmatory native GAL study may now proceed. The pilot artifact and prior failed runs remain immutable.
+
+
+### Foundational native GAL confirmatory run completed — 2026-11-02
+- Workflow run: `41497968447`; job `125457787981`; conclusion success.
+- Source commit: `947ef554e69a3ae8e04b6912b1910dae7b188f02`.
+- Configuration: 100 paired universe seeds (0–99), 100 agents/generation, 10 generations, five original inheritance modes. 500 seed×mode runs and 5,000 generation records.
+- Artifact: `native-gal-confirmatory-41497968447`, artifact ID `13168006474`, 413,865,175 bytes; uploaded ZIP SHA-256 `2586d5128f98b67084d6be19d51061cdfff68fd8d8a0fd777c6b46d93ede0828`. Archive contains five output files, including compressed raw JSONL, summary, generation CSV, validity audit and raw-data checksum.
+- Reported validity audit: 500/500 seed-mode runs; 5,000/5,000 generation records; 90,000 inheritance events per mode; no reported audit errors. Every mode recorded 100 agents/generation, 50 task attempts/agent/generation, all five task types and skill values within [0,1].
+- Mechanism audit: A unchanged child state 90,000/90,000; B-copy exact skill and concept transfer 90,000/90,000; C-full concept transfer 90,000/90,000 with teaching-style non-exact skills; C-no-memory parent concept transfer 0/90,000; C-low-effort concept transfer 90,000/90,000.
+- Generation-10 mean task success: A 0.041434; B-copy 0.884194; C-full 0.846732; C-no-memory 0.815040; C-low-effort 0.365926.
+- Pre-registered paired seed contrasts (treatment minus control):
+  - B-copy − A: +0.842760; 95% paired bootstrap CI [0.841444, 0.844062]; paired t=1261.44; p=5.01e-210; Holm p=2.51e-209; 100/100 wins.
+  - C-full − A: +0.805298; CI [0.803582, 0.807000]; t=925.50; p=1.03e-196; Holm p=4.12e-196; 100/100 wins.
+  - C-no-memory − A: +0.773606; CI [0.771770, 0.775474]; t=807.17; p=7.84e-191; Holm p=2.35e-190; 100/100 wins.
+  - C-low-effort − A: +0.324492; CI [0.322002, 0.327030]; t=250.55; p=1.45e-140; Holm p=2.91e-140; 100/100 wins.
+  - B-copy − C-full: +0.037462; CI [0.036366, 0.038566]; t=65.93; p=1.31e-83; Holm p=1.31e-83; 100/100 wins.
+  - All five Holm-adjusted paired t-test contrasts are below 0.05; Wilcoxon sensitivity p-values are also reported in the workflow log.
+- Interpretation: Strong evidence that inheritance as implemented in this specific handcrafted, stationary GAL environment improves task performance over mode A, with direct state copying outperforming teaching-style C-full. This does not establish biological evolution, general intelligence, consciousness, or transfer to external environments.
+- Audit limitation: workflow validity audit is a program-generated check. A separate independent parse of the 413.9 MB artifact archive and verification of its embedded raw SHA-256 remains pending; do not label this an independently reproduced analysis until that check is completed.
+- Preserve artifact and workflow logs immutably. Do not rerun or overwrite this confirmatory result; follow-up work must use a new protocol/run ID.
