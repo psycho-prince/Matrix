@@ -70,3 +70,20 @@ This log is append-only by convention. Do not replace earlier entries; append a 
   - invariant-test + extended study: run `41427307866`, queued at time of this entry.
   - deterministic benchmark: run `41427307788`, queued at time of this entry.
 - This failure is retained in the record. Do not report the invariant suite as passing until run `41427307866` completes successfully.
+
+
+### Automated tests green — 2026-11-02
+- Corrected EWC/invariant workflow run `41427307866` completed successfully.
+- The `Run automated research invariant tests` step completed successfully, followed by the extended Split Digits study and artifact upload.
+- The separate existing deterministic benchmark workflow `41427307788` also completed successfully.
+- This establishes that the current automated test suite executes successfully; it does not establish the foundational GAL hypothesis.
+
+### Native GAL pilot launched — 2026-11-02
+- Added `experiments/10_foundational_gal/run_native_gal_pilot.py`.
+- Added `.github/workflows/native-gal-pilot.yml`.
+- Pilot configuration: 5 universe seeds × 20 agents per generation × 4 generations × all five original inheritance modes.
+- The runner uses the original `Agent`, `Environment`, `inherit`, `develop`, `learn_independently`, and `work` methods. It adds observation around task attempts and records raw per-agent state, parent/child inheritance snapshots, task-level success, population skill summaries, concept counts, and generation performance.
+- Built-in fail-closed mechanism checks cover mode A no-inheritance, exact B-copy transfer, C-no-memory concept exclusion, and skill bounds.
+- Workflow run: `41427799864`; job `125218543631`.
+- At the time of this entry the pilot workflow was still installing dependencies; no pilot outcome or raw-data audit is claimed yet.
+- Confirmatory 100-seed run remains blocked until pilot completion and inspection.
