@@ -97,3 +97,12 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Corrected the summary to read the actual `Agent.skills` attribute: `agent.skills[skill]`.
 - Correction commit: `9a4075f55de67e01c248862b6706163766710798`.
 - The correction triggers a new pilot workflow run. Confirmatory 100-seed execution remains blocked until the new pilot completes and its raw data/mechanism checks are audited.
+
+
+### Native GAL pilot failure and correction — 2026-11-02 (continued)
+- Pilot run `41429686327` completed with failure; job `125224855484`.
+- The 14 automated invariant tests passed in that job. The pilot then failed while constructing the generation summary: the aggregation indexed live `Agent` objects as dictionaries (`a["skills"]`), raising `TypeError: 'Agent' object is not subscriptable`. The pilot did not upload raw data; no pilot outcome is available.
+- Source review also found that the pilot identity included the inheritance mode. Since the original Agent derives its lifetime RNG seed from identity, this accidentally gave different random streams to each mode and violated the paired-seed design.
+- Corrected the skill aggregation to read `Agent.skills` and removed the mode label from agent identity so matching seed/generation/agent indices receive the same deterministic lifetime RNG stream across modes.
+- Corrective code commit: `e3bda5cf9a4ccffc9b401c5cd1a8f5c415dad696`.
+- This is a code correction, not a successful pilot. Await the newly triggered workflow and audit its raw outputs before any confirmatory run.
