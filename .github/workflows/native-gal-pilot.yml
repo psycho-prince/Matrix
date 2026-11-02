@@ -1,0 +1,38 @@
+name: Native GAL Mechanism Pilot
+on:
+  push:
+    branches: ["research/gal-native-reproduction"]
+    paths:
+      - "experiments/10_foundational_gal/**"
+      - "experiments/09_split_digits/tests/**"
+      - "gal/agents/agent.py"
+      - "gal/environment/world.py"
+      - ".github/workflows/native-gal-pilot.yml"
+permissions:
+  contents: read
+jobs:
+  native-gal-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy scipy
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Run automated inheritance and metric tests
+        run: python -m unittest discover -s experiments/09_split_digits/tests -v
+      - name: Run small native GAL population pilot
+        run: |
+          python experiments/10_foundational_gal/run_native_gal_pilot.py --seeds 5 --agents 20 --generations 4
+      - name: Upload immutable pilot raw data and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-gal-mechanism-pilot-${{ github.run_id }}
+          path: artifacts/native_gal_pilot/
+          if-no-files-found: error
+          retention-days: 365
