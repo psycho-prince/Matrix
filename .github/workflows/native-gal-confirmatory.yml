@@ -1,0 +1,44 @@
+name: Native GAL Confirmatory Experiment
+on:
+  push:
+    branches: ["research/gal-native-reproduction"]
+    paths:
+      - "experiments/10_foundational_gal/**"
+      - "gal/agents/agent.py"
+      - "gal/environment/world.py"
+      - ".github/workflows/native-gal-confirmatory.yml"
+permissions:
+  contents: read
+jobs:
+  confirmatory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned scientific dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy==2.4.6 scipy==1.17.1
+      - name: Verify confirmatory protocol configuration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          protocol = Path("experiments/10_foundational_gal/FOUNDATIONAL_VALIDATION_PROTOCOL.md").read_text()
+          required = ["100 paired universe seeds", "100 agents per generation", "10 generations", "Holm correction"]
+          missing = [x for x in required if x not in protocol]
+          if missing:
+              raise SystemExit(f"Protocol text missing: {missing}")
+          PY
+      - name: Run confirmatory native GAL experiment
+        run: |
+          python experiments/10_foundational_gal/run_native_gal_confirmatory.py --seeds 100 --agents 100 --generations 10
+      - name: Upload immutable confirmatory raw data and analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-gal-confirmatory-${{ github.run_id }}
+          path: artifacts/native_gal_confirmatory/
+          if-no-files-found: error
+          retention-days: 365
