@@ -102,10 +102,9 @@ class ForgettingMetricTests(unittest.TestCase):
             [0.60, 0.70, 0.00],
             [0.50, 0.65, 0.90],
         ]
-        self.assertEqual(
-            benchmark.calculate_forgetting(matrix),
-            [0.30, 0.05, 0.0],
-        )
+        observed = benchmark.calculate_forgetting(matrix)
+        for actual, expected in zip(observed, [0.30, 0.05, 0.0]):
+            self.assertAlmostEqual(actual, expected, places=7)
 
     def test_invalid_task_matrix_is_rejected(self):
         with self.assertRaises(ValueError):
