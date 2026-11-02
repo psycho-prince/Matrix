@@ -106,3 +106,23 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Corrected the skill aggregation to read `Agent.skills` and removed the mode label from agent identity so matching seed/generation/agent indices receive the same deterministic lifetime RNG stream across modes.
 - Corrective code commit: `e3bda5cf9a4ccffc9b401c5cd1a8f5c415dad696`.
 - This is a code correction, not a successful pilot. Await the newly triggered workflow and audit its raw outputs before any confirmatory run.
+
+
+### Native GAL mechanism pilot passed and raw-data audit — 2026-11-02
+- Corrected pilot workflow run `41493595467` completed successfully on commit `e3bda5cf9a4ccffc9b401c5cd1a8f5c415dad696`.
+- Job: `125442638737`; all steps passed, including the 14 automated invariant tests, pilot execution, and artifact upload.
+- Artifact: `native-gal-mechanism-pilot-41493595467`, artifact ID `13165401702`, size 1,365,652 bytes, SHA-256 `b42669724acbc9edbb2b011f0ac88fd9e0f68bdd98654f0f8ea3db093b1c0299`.
+- Configuration: 5 paired universe seeds × 20 agents/generation × 4 generations × 5 original modes. Raw archive contains 25 per-mode/per-seed JSON files, 100 generation records, 2,000 agent-generation snapshots, and 1,500 inheritance events.
+- Structural audit passed: every generation has 20 agents; each agent has 50 work attempts; each generation has 1,000 task attempts; all five task types are represented; generation 1 has no inheritance events; later generations have exactly 20 parent-child events. No structural errors were found.
+- Pairing correction verified in source: mode-independent agent identities ensure corresponding seed/generation/agent indices use identical deterministic lifetime RNG streams across modes. The Agent implementation uses a separate inheritance RNG stream, so teaching-mode random draws do not consume lifetime task/learning draws.
+- Mechanism audit across 300 inheritance events per mode:
+  - A: all 300 children unchanged by inheritance.
+  - B-copy: exact skills and concepts in all 300 events.
+  - C-full: concepts transferred in all 300; skills not exact copies, consistent with teaching updates.
+  - C-no-memory: no parent concepts retained in all 300; skills updated through teaching.
+  - C-low-effort: concepts transferred in all 300; skills updated through the one-iteration teaching path.
+  - Skill bounds remained within [0, 1] in all modes.
+- Pilot descriptive generation-4 mean success: A 0.0420; B-copy 0.4148; C-full 0.3886; C-no-memory 0.3266; C-low-effort 0.2634. Paired seed-level generation-4 differences vs A: B-copy +0.3728; C-full +0.3466; C-no-memory +0.2846; C-low-effort +0.2214.
+- These are pilot-scale descriptive outcomes only (5 seeds, 20 agents, 4 generations); no confirmatory inference or hypothesis claim is made from them.
+- Artifact structural audit command executed against downloaded ZIP; checks returned 25 files, 100 generation records, 2,000 agent snapshots, 1,500 inheritance events, and zero validation errors.
+- Gate decision: pilot mechanism and data-capture checks passed. The pre-registered 100-seed × 100-agent × 10-generation confirmatory native GAL study may now proceed. The pilot artifact and prior failed runs remain immutable.
