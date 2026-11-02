@@ -119,7 +119,7 @@ def apply_gal_inheritance(model,fisher,keep=GAL_KEEP,seed=0):
             p.copy_(torch.where(mask,p,fresh))
 
 def evaluate_task_matrix(model,x,y):
-    return [accuracy(model,x[y.isin(torch.tensor(task))],y[y.isin(torch.tensor(task))]) for task in TASKS]
+    return [accuracy(model,x[torch.isin(y,torch.tensor(task))],y[torch.isin(y,torch.tensor(task))]) for task in TASKS]
 
 def run_method(method,seed,epochs,memory=0,ewc_strength=0.0):
     seed_all(seed)
@@ -130,7 +130,7 @@ def run_method(method,seed,epochs,memory=0,ewc_strength=0.0):
     means={n:p.detach().clone() for n,p in model.named_parameters()}
     task_matrix=[]; steps=[]; memory_x=[]; memory_y=[]
     for ti,task in enumerate(TASKS):
-        mask=ytr.isin(torch.tensor(task))
+        mask=torch.isin(ytr,torch.tensor(task))
         tx,ty=xtr[mask],ytr[mask]
         loader_steps=int(np.ceil(len(ty)/BATCH))*epochs
         if method=="GAL-CL" and ti>0:
@@ -172,7 +172,7 @@ def tune_ewc(seeds,epochs):
             fisher={n:torch.zeros_like(p) for n,p in model.named_parameters()}
             means={n:p.detach().clone() for n,p in model.named_parameters()}
             for ti,task in enumerate(TASKS):
-                m=ytr.isin(torch.tensor(task)); tx,ty=xtr[m],ytr[m]
+                m=torch.isin(ytr,torch.tensor(task)); tx,ty=xtr[m],ytr[m]
                 for ep in range(epochs):
                     fit_task(model,tx,ty,opt,seed*100+ti*10+ep,
                              (fisher,means,lam) if ti>0 else None)
