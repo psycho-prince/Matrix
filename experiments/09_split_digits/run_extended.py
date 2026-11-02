@@ -70,14 +70,13 @@ def make_memory(x,y,per_class,seed):
     return (torch.cat(mx),torch.cat(my)) if mx else (torch.empty((0,64)),torch.empty((0,),dtype=torch.long))
 
 def fit_task(model,tx,ty,opt,seed,ewc=None,replay=None,steps=None):
-    g=torch.Generator().manual_seed(seed)
-    loader=DataLoader(TensorDataset(tx,ty),batch_size=BATCH,shuffle=True,generator=g)
-    batches=list(loader)
-    nsteps=steps if steps is not None else len(batches)
+    nsteps=steps if steps is not None else int(np.ceil(len(ty)/BATCH))
     model.train()
     for i in range(nsteps):
         if replay is None:
-            xb,yb=batches[i%len(batches)]
+            g=torch.Generator().manual_seed(seed*17+i)
+            ids=torch.randint(len(ty),(BATCH,),generator=g)
+            xb,yb=tx[ids],ty[ids]
         else:
             rx,ry=replay
             gi=torch.Generator().manual_seed(seed*31+i)
@@ -105,13 +104,13 @@ def apply_gal_inheritance(model,fisher,keep=GAL_KEEP,seed=0):
     params=[p for p in model.parameters()]
     scores=torch.cat([fisher[n].detach().flatten().cpu() for n,p in model.named_parameters()])
     n_keep=max(1,int(keep*scores.numel()))
-    threshold=torch.topk(scores,n_keep,sorted=False).values.min()
-    gen=torch.Generator().manual_seed(seed)
+    selected=torch.zeros(scores.numel(),dtype=torch.bool)
+    selected[torch.topk(scores,n_keep,sorted=False).indices]=True
     with torch.no_grad():
         offset=0
         for name,p in model.named_parameters():
             count=p.numel()
-            mask=(scores[offset:offset+count].to(p.device).reshape_as(p)>=threshold.to(p.device))
+            mask=selected[offset:offset+count].to(p.device).reshape_as(p)
             offset+=count
             if p.ndim>=2:
                 fresh=torch.empty_like(p); nn.init.xavier_uniform_(fresh)
