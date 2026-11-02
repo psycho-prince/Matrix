@@ -30,3 +30,13 @@ This deliberately tests selective inheritance without replay. It is compared aga
 - The CI is a descriptive normal approximation; paired seed-level comparisons and bootstrap CIs should be added before publication.
 - EWC tuning uses a disjoint tuning seed set, not the held-out evaluation set.
 - The GAL-CL rule is an explicit new mapping, not evidence that the original symbolic GAL implementation itself learns neural tasks.
+
+
+## EWC correction (new implementation; applies only to future runs)
+
+The original 2026-11-02 run used a cumulative Fisher diagonal with a single moving reference mean. That implementation is retained in the historical run and is not overwritten in its audit.
+
+The corrected implementation stores a separate pair `(F_t, theta_t^*)` for every completed task and penalizes the current parameters against each task's own reference:
+`L_EWC(theta) = L_current(theta) + (lambda/2) * sum_t sum_i F_{t,i} (theta_i - theta^*_{t,i})^2`.
+
+The Fisher diagonal is estimated from per-example squared gradients on that task's training partition. This is a task-wise diagonal EWC implementation; it is not online EWC. Future reports must identify it accordingly.
