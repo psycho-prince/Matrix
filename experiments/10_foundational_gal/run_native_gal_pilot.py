@@ -68,7 +68,7 @@ def run_seed(mode, seed, agents_n, generations):
 
     for gen in range(1, generations + 1):
         current = [
-            Agent(identity=f"PILOT-{mode}-S{seed}-G{gen}-A{i:03d}",
+            Agent(identity=f"PILOT-S{seed}-G{gen}-A{i:03d}",
                   generation=gen, universe_seed=seed)
             for i in range(agents_n)
         ]
