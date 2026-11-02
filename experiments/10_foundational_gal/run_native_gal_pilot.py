@@ -128,7 +128,7 @@ def run_seed(mode, seed, agents_n, generations):
             },
             "inheritance_events": inheritance_events,
             "mean_skill_levels": {
-                skill: float(np.mean([a["skills"][skill] for a in current]))
+                skill: float(np.mean([agent.skills[skill] for agent in current]))
                 for skill in current[0].skills
             },
             "mean_concept_count": float(np.mean([len(a.knowledge_concepts) for a in current])),
