@@ -87,3 +87,13 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Workflow run: `41427799864`; job `125218543631`.
 - At the time of this entry the pilot workflow was still installing dependencies; no pilot outcome or raw-data audit is claimed yet.
 - Confirmatory 100-seed run remains blocked until pilot completion and inspection.
+
+
+### Native GAL pilot failure and code correction — 2026-11-02
+- Pilot run `41429686327` completed with failure; job `125224855484`.
+- Dependency installation and all 14 automated invariant tests succeeded.
+- Pilot execution failed while building the generation-level mean-skill summary: the code indexed an `Agent` instance as if it were a dictionary (`a["skills"][skill]`), raising `TypeError: 'Agent' object is not subscriptable`.
+- No pilot artifact was uploaded; this run produced no scientific result and is retained as a failed execution.
+- Corrected the summary to read the actual `Agent.skills` attribute: `agent.skills[skill]`.
+- Correction commit: `9a4075f55de67e01c248862b6706163766710798`.
+- The correction triggers a new pilot workflow run. Confirmatory 100-seed execution remains blocked until the new pilot completes and its raw data/mechanism checks are audited.
