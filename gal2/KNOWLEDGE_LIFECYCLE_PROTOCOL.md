@@ -19,7 +19,7 @@ conflict rate, and raw per-seed/per-arm/per-generation results with SHA-256.
 
 ## Interpretation constraints
 This is a deterministic symbolic software test, not a cognition or foundation
-model test. The noisy-transfer arm currently carries the same payload as
-all-memory transfer; it is a named placeholder, not an independent noise
-injection condition. The finite world and oracle do not test open-ended
+model test. The noisy-transfer arm deterministically corrupts every third transferred
+claim. Each successor re-verifies inherited claims against held-out truth
+before use; corrupted claims are rejected and remain in the audit trail. The finite world and oracle do not test open-ended
 discovery, semantic reasoning, or general intelligence.
