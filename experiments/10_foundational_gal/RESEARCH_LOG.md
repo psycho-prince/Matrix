@@ -162,3 +162,16 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Mechanism audit: A unchanged child state 90,000/90,000; B-copy exact skill and concept copy 90,000/90,000; C-full exact concept transfer 90,000/90,000; C-no-memory parent concepts retained 0/90,000; C-low-effort concept transfer 90,000/90,000. No validity audit errors.
 - Interpretation: strong evidence that the implemented inheritance mechanisms increase task success in this specific handcrafted, stationary symbolic GAL environment under matched exposure. B-copy is highest; teaching-style modes also exceed independent mode A. This does not establish biological evolution, consciousness, general intelligence, or performance in external/novel environments.
 - Next required work: independent audit of the archived raw JSONL (including seed-level pairing and task-level denominators), inspect the actual Agent inheritance implementation and confirm all task-attempt attribution and cycle exposure semantics, then conduct a separately pre-registered novel-task/environment-shift test. The current runner's automatic validity audit is necessary but not sufficient scientific peer review.
+
+
+## 2026-11-04 — GAL 2.0 parallel core implementation started
+
+- Created isolated branch: `research/gal-2.0-core`, based on `research/gal-native-reproduction`.
+- Preserved the original GAL implementation under `gal/` and the foundational experiment records; GAL 2.0 is additive and lives under `gal2/`.
+- Added structured capability and evidence models, typed episodic/semantic/procedural memory, deterministic dynamic task generation with explicit train/validation/test labels, and an evidence-gated inheritance mechanism.
+- Parent capabilities are eligible only when parent-verified. A child receives them as unverified candidates and must independently pass held-out validation. Verified semantic/procedural memory can be inherited; episodic records remain local.
+- Added invariant tests for validation, deterministic task generation, split identifiers, memory separation, verified-memory transfer, capability inheritance, child re-verification and fail-closed insufficient evidence.
+- Added `gal2/PROTOCOL.md`, `gal2/README.md`, `gal2/pyproject.toml`, and GitHub Actions workflow `.github/workflows/gal2-core.yml`.
+- Important limitation: the first task executor is a synthetic probabilistic harness, not a real reasoning system. Passing tests would validate implementation invariants only; no practical capability, AGI, transfer, or superiority claim is made.
+- Foundation-model integration, fitness-based selection, mutation, recombination, adaptive population sizing, persistence and external benchmark evaluation are deferred.
+- Initial branch implementation is undergoing CI validation; no test pass is claimed in this entry.
