@@ -2,27 +2,28 @@
 
 GAL 2.0 is a parallel research implementation. It does not replace or modify the original symbolic GAL implementation under `gal/`.
 
-## Initial scope
+## Implemented architecture
 
-- Structured capability records with evidence, confidence, prerequisites and context metadata.
+- Structured capability records with outcome-based proficiency, evidence provenance, confidence indicator, prerequisites, context tags, failure conditions, version and lineage.
 - Separate episodic, semantic and procedural memory stores.
-- Deterministic dynamic task generation with train/validation/test labels.
-- Evidence-gated inheritance: only parent-verified capabilities are candidates, and a child receives them as **unverified** until it independently passes held-out evaluation.
+- Seeded task generation with train/validation/test labels (finite vocabulary).
+- Evidence-gated basic inheritance.
+- **Adaptive inheritance:** context compatibility scoring, conservative proficiency recalibration, explicit accept/reject reports and child-side revalidation.
+- Evaluation is isolated from training updates and uses a Wilson lower-bound gate.
 
 ## Important limitations
 
-The current task executor is a synthetic probabilistic simulator, not an LLM, robot or real-world task adapter. Its scores are software-test fixtures and must not be presented as empirical AI capability results. The initial generator is deterministic and uses a finite vocabulary; it is not yet an open-ended task generator. Memory is in-memory only. Selection, mutation, recombination, population adaptation, persistence, safety policies and foundation-model integration are not implemented in this milestone.
+This remains a synthetic research harness, not an actual learning agent. Its task executor is a probabilistic simulator; it does not use memory, prerequisites or procedures to solve tasks. Context similarity is a Jaccard heuristic over declared tags, not semantic understanding. No external benchmark, baseline comparison, resource accounting or independent replication has been run. Do not present synthetic scores as empirical AI capability results.
 
 ## Run tests
 
 ```bash
 python -m pip install -e '.[test]'
-pytest
+python -m pytest
 ```
 
 ## Research integrity
 
-Do not compare GAL 2.0 synthetic scores to the original GAL experiment as if they were the same benchmark. Preserve raw experiment outputs, seeds, code revision and protocol for all future studies.
+Keep GAL 2.0 separate from original GAL 1.0 results. Preserve raw outputs, seeds, protocol and code revision. Unit tests validate software invariants, not scientific hypotheses.
 
-
-CI is defined in `.github/workflows/gal2-core.yml`; the workflow runs the invariant suite on pushes to this implementation path.
+See [Adaptive inheritance design](ADAPTIVE_INHERITANCE.md) and [validation protocol](PROTOCOL.md).
