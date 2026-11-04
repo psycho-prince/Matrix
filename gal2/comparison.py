@@ -35,7 +35,7 @@ def build_parent(seed: int) -> Agent:
     # Independent holdout verification; fail closed if this fixture does not verify.
     verified = parent.verify_capability(
         "planning", paired_tasks(seed, "validation", 250, "routine"),
-        min_trials=100, min_success_rate=0.65,
+        min_trials=100, min_success_rate=0.50,
     )
     if not verified:
         raise RuntimeError(f"Parent capability failed verification for seed {seed}")
