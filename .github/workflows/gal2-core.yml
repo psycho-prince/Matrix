@@ -135,3 +135,16 @@ jobs:
           name: gal2-generational-knowledge-lifecycle
           path: gal2/knowledge-lifecycle-report.json
           if-no-files-found: error
+
+  analytical-theory:
+    name: Exact analytical theory checks (no simulation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exact rational mathematics tests
+        run: |
+          python -m unittest gal2.tests.test_analytical_theory -v
+          python -m compileall -q gal2/analytical_theory.py
