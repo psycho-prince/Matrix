@@ -15,3 +15,7 @@ Each test has a distinct pass condition. Overall success requires all five condi
 
 ## Limitations
 Paraphrase handling is a finite hand-authored pattern set, not semantic language understanding. Multi-hop is a fixed two-edge relation path, not general planning. Incomplete knowledge is represented as a missing slot. Contradiction detection uses exact symbolic keys and context labels. Passing demonstrates implementation correctness under this protocol only.
+
+
+## Implementation note
+The parser accepts only the explicit question forms listed in the benchmark source; it does not infer arbitrary paraphrases. The current CI suite validates these forms and rejects unsupported ones.
