@@ -23,3 +23,6 @@ pytest
 ## Research integrity
 
 Do not compare GAL 2.0 synthetic scores to the original GAL experiment as if they were the same benchmark. Preserve raw experiment outputs, seeds, code revision and protocol for all future studies.
+
+
+CI is defined in `.github/workflows/gal2-core.yml`; the workflow runs the invariant suite on pushes to this implementation path.
