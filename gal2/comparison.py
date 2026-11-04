@@ -38,7 +38,7 @@ def build_parent(seed: int) -> Agent:
         min_trials=100, min_success_rate=0.50,
     )
     if not verified:
-        raise RuntimeError(f"Parent capability failed verification for seed {seed}")
+        raise RuntimeError(f"Parent capability failed verification for seed {seed}: proficiency={parent.capabilities['planning'].proficiency:.4f}, report={parent.last_evaluation.get('planning')}")
     # This baseline tests transfer of verified declarative/procedural memory.
     parent.memory.verify_related("planning")
     return parent
