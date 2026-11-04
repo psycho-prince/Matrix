@@ -84,3 +84,20 @@ jobs:
           name: gal2-inheritance-baseline-comparison
           path: gal2/gal2-comparison.json
           if-no-files-found: error
+
+  knowledge-question-benchmark:
+    name: Knowledge processing and question creation benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run bidirectional benchmark
+        run: python -m gal2.knowledge_questions > gal2/knowledge-question-report.json
+      - name: Upload benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gal2-knowledge-question-benchmark
+          path: gal2/knowledge-question-report.json
+          if-no-files-found: error
