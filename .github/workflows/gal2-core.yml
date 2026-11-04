@@ -118,3 +118,20 @@ jobs:
           name: gal2-five-knowledge-question-stress-tests
           path: gal2/knowledge-question-stress-report.json
           if-no-files-found: error
+
+  generational-knowledge-lifecycle:
+    name: Generational knowledge lifecycle experiment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run deterministic lifecycle experiment
+        run: python -m gal2.knowledge_lifecycle > gal2/knowledge-lifecycle-report.json
+      - name: Upload raw results and summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gal2-generational-knowledge-lifecycle
+          path: gal2/knowledge-lifecycle-report.json
+          if-no-files-found: error
