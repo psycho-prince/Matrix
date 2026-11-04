@@ -1,0 +1,31 @@
+name: GAL 2.0 Core Tests
+
+on:
+  push:
+    branches: [research/gal-2.0-core]
+    paths:
+      - 'gal2/**'
+  pull_request:
+    paths:
+      - 'gal2/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: gal2/pyproject.toml
+      - name: Install GAL 2.0 and test dependencies
+        working-directory: gal2
+        run: python -m pip install -e '.[test]'
+      - name: Run GAL 2.0 invariant tests
+        working-directory: gal2
+        run: python -m pytest
