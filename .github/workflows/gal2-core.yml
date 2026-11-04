@@ -38,7 +38,7 @@ jobs:
         run: python -m pytest -q
 
   static-validation:
-    name: Static and packaging validation
+    name: Static and source validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
