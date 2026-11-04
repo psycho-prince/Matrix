@@ -35,19 +35,19 @@ class QueryResult:
 
 
 def _norm(value: str) -> str:
-    return re.sub(r"\\s+", " ", value.strip().lower())
+    return re.sub(r"\s+", " ", value.strip().lower())
 
 
 def parse_question(text: str) -> ParsedQuestion | None:
     """Parse known paraphrase forms; deliberately no fuzzy/LLM interpretation."""
     patterns = (
-        (r"what is the capital of (.+?)\\??", "capital_of"),
-        (r"which city is the capital of (.+?)\\??", "capital_of"),
-        (r"name the capital city of (.+?)\\??", "capital_of"),
-        (r"where is (.+?) located\\??", "located_in"),
-        (r"in which region is (.+?) located\\??", "located_in"),
-        (r"what region contains (.+?)\\??", "located_in"),
-        (r"what is the (.+?) of (.+?)\\??", None),
+        (r"what is the capital of (.+?)\??", "capital_of"),
+        (r"which city is the capital of (.+?)\??", "capital_of"),
+        (r"name the capital city of (.+?)\??", "capital_of"),
+        (r"where is (.+?) located\??", "located_in"),
+        (r"in which region is (.+?) located\??", "located_in"),
+        (r"what region contains (.+?)\??", "located_in"),
+        (r"what is the (.+?) of (.+?)\??", None),
     )
     value = _norm(text)
     for pattern, relation in patterns:
@@ -94,7 +94,7 @@ def answer_question(text: str, knowledge: Iterable[Fact]) -> QueryResult:
 def answer_multi_hop(question: str, knowledge: Iterable[Fact]) -> QueryResult:
     """Resolve: 'Which region contains the capital of X?' via two edges."""
     match = re.fullmatch(
-        r"which region contains the capital of (.+?)\\??", _norm(question)
+        r"which region contains the capital of (.+?)\??", _norm(question)
     )
     if not match:
         return QueryResult("unparsed")
