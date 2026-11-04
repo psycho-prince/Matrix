@@ -12,7 +12,11 @@ dependencies = []
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
 
+[tool.setuptools]
+packages = ["gal2"]
+package-dir = {gal2 = "."}
+
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".."]
 testpaths = ["tests"]
 addopts = "-q"
