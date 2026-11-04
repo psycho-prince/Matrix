@@ -27,3 +27,8 @@ python -m pytest
 Keep GAL 2.0 separate from original GAL 1.0 results. Preserve raw outputs, seeds, protocol and code revision. Unit tests validate software invariants, not scientific hypotheses.
 
 See [Adaptive inheritance design](ADAPTIVE_INHERITANCE.md) and [validation protocol](PROTOCOL.md).
+
+
+## Continuous integration
+
+GitHub Actions runs the Python 3.10/3.11/3.12 unit-test matrix, static source checks, and deterministic adaptive-inheritance mechanism validation as independent parallel jobs. The mechanism-validation job uploads a JSON report artifact.
