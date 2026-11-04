@@ -77,10 +77,10 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run paired 100-seed comparison
-        run: python -m gal2.comparison --seed-start 1000 --seeds 100 --test-trials 250 --output gal2-comparison.json
+        run: python -m gal2.comparison --seed-start 1000 --seeds 100 --test-trials 250 --output gal2/gal2-comparison.json
       - name: Upload raw results and summary
         uses: actions/upload-artifact@v4
         with:
           name: gal2-inheritance-baseline-comparison
-          path: gal2-comparison.json
+          path: gal2/gal2-comparison.json
           if-no-files-found: error
