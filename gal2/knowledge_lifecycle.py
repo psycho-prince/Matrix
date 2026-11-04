@@ -60,8 +60,10 @@ class KnowledgeStore:
         child = KnowledgeStore(child_id, child_generation)
         selected = ([c for c in self.claims if c.verified] if mode=="verified_only"
                     else list(self.claims) if mode in {"all_memory","noisy_transfer"} else [])
-        for c in selected:
-            child.claims.append(Claim(c.key,c.value,c.source_agent,c.source_generation,
+        for index,c in enumerate(selected):
+            # Deterministic corruption channel for the noisy-transfer arm.
+            value = ("corrupt:" + c.value) if mode == "noisy_transfer" and index % 3 == 0 else c.value
+            child.claims.append(Claim(c.key,value,c.source_agent,c.source_generation,
                 c.evidence_id,c.confidence,False,c.lineage+(self.agent_id,)))
         child.audit.append({"event":"inherited","mode":mode,"count":len(selected),"from":self.agent_id})
         return child
@@ -99,6 +101,9 @@ def run_experiment(seed_start=7300,seeds=40,generations=4):
                     aggregate[mode][metric]+=value
                 if gen<generations-1:
                     child=store.inherit(f"{mode}-s{seed}-g{gen+1}",gen+1,mode)
+                    # Each successor re-verifies inherited claims before use.
+                    for inherited in list(child.claims):
+                        child.verify(inherited,truth)
                     for j,key in enumerate(heldout[:2]):
                         if not any(c.key==key for c in child.claims):
                             child.acquire(key,truth[key],f"s{seed}-g{gen+1}-new{j}",0.85)
