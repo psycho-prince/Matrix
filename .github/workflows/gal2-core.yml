@@ -67,3 +67,20 @@ jobs:
           name: gal2-mechanism-validation
           path: gal2/validation-report.json
           if-no-files-found: error
+
+  baseline-comparison:
+    name: Paired inheritance baseline experiment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run paired 100-seed comparison
+        run: python -m gal2.comparison --seed-start 1000 --seeds 100 --test-trials 250 --output gal2-comparison.json
+      - name: Upload raw results and summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gal2-inheritance-baseline-comparison
+          path: gal2-comparison.json
+          if-no-files-found: error
