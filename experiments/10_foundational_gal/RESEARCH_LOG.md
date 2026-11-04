@@ -146,3 +146,19 @@ This log is append-only by convention. Do not replace earlier entries; append a 
 - Interpretation: Strong evidence that inheritance as implemented in this specific handcrafted, stationary GAL environment improves task performance over mode A, with direct state copying outperforming teaching-style C-full. This does not establish biological evolution, general intelligence, consciousness, or transfer to external environments.
 - Audit limitation: workflow validity audit is a program-generated check. A separate independent parse of the 413.9 MB artifact archive and verification of its embedded raw SHA-256 remains pending; do not label this an independently reproduced analysis until that check is completed.
 - Preserve artifact and workflow logs immutably. Do not rerun or overwrite this confirmatory result; follow-up work must use a new protocol/run ID.
+
+
+### Foundational native GAL confirmatory run completed — 2026-11-02
+- Workflow run `41497968447` completed successfully; commit `947ef554e69a3ae8e04b6912b1910dae7b188f02`.
+- Artifact: `native-gal-confirmatory-41497968447`, artifact ID `13168006474`, size 413,865,175 bytes, GitHub artifact ZIP SHA-256 `2586d5128f98b67084d6be19d51061cdfff68fd8d8a0fd777c6b46d93ede0828`.
+- Configuration: 100 paired seeds × 100 agents/generation × 10 generations × 5 modes. 500 seed-mode runs, 5,000 generation records, 500,000 agent-generation records, and 90,000 inheritance events per mode (450,000 total). Validity audit observed 500/500 runs and 5,000/5,000 generations; errors list empty.
+- Generation-10 mean task success: A 0.041434; B-copy 0.884194; C-full 0.846732; C-no-memory 0.815040; C-low-effort 0.365926.
+- Pre-registered paired generation-10 contrasts (difference in success-rate units; all treatment wins 100/100; all Holm-adjusted paired t tests significant at .05):
+  - B-copy − A: +0.842760; 95% paired bootstrap CI [0.841444, 0.844062]; t=1261.44; p=5.01e-210; Holm p=2.51e-209.
+  - C-full − A: +0.805298; CI [0.803582, 0.807000]; t=925.50; p=1.03e-196; Holm p=4.12e-196.
+  - C-no-memory − A: +0.773606; CI [0.771770, 0.775474]; t=807.17; p=7.84e-191; Holm p=2.35e-190.
+  - C-low-effort − A: +0.324492; CI [0.322002, 0.327030]; t=250.55; p=1.45e-140; Holm p=2.91e-140.
+  - B-copy − C-full: +0.037462; CI [0.036366, 0.038566]; t=65.93; p=1.31e-83; Holm p=1.31e-83.
+- Mechanism audit: A unchanged child state 90,000/90,000; B-copy exact skill and concept copy 90,000/90,000; C-full exact concept transfer 90,000/90,000; C-no-memory parent concepts retained 0/90,000; C-low-effort concept transfer 90,000/90,000. No validity audit errors.
+- Interpretation: strong evidence that the implemented inheritance mechanisms increase task success in this specific handcrafted, stationary symbolic GAL environment under matched exposure. B-copy is highest; teaching-style modes also exceed independent mode A. This does not establish biological evolution, consciousness, general intelligence, or performance in external/novel environments.
+- Next required work: independent audit of the archived raw JSONL (including seed-level pairing and task-level denominators), inspect the actual Agent inheritance implementation and confirm all task-attempt attribution and cycle exposure semantics, then conduct a separately pre-registered novel-task/environment-shift test. The current runner's automatic validity audit is necessary but not sufficient scientific peer review.
