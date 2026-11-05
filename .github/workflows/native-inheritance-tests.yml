@@ -1,0 +1,35 @@
+name: GAL 1.0 Native Inheritance Mechanism Tests
+
+on:
+  push:
+    branches: [research/gal-native-reproduction]
+    paths:
+      - 'gal/**'
+      - 'tests/test_native_inheritance_channels.py'
+      - '.github/workflows/native-inheritance-tests.yml'
+  pull_request:
+    paths:
+      - 'gal/**'
+      - 'tests/test_native_inheritance_channels.py'
+      - '.github/workflows/native-inheritance-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-inheritance-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: python -m pip install pytest numpy scipy
+      - name: Run GAL 1.0 native inheritance mechanism tests
+        run: python -m pytest -q tests/test_native_inheritance_channels.py
