@@ -1,0 +1,107 @@
+{
+  "seed": 7300,
+  "dataset_manifest": {
+    "world_id": "unknown",
+    "acquisition_facts": 12,
+    "verification_facts": 6,
+    "evaluation_facts": 6,
+    "evaluation_only": true
+  },
+  "leakage_findings": [],
+  "arm_results": [
+    {
+      "arm": "A_no_persistence",
+      "accuracy": 0,
+      "latency_ms": 104414.65520858765,
+      "tokens_used": 0,
+      "memory_size_bytes": 0,
+      "abstentions": 0,
+      "false_claims": 0,
+      "oracle_exposed": false,
+      "response": ""
+    },
+    {
+      "arm": "B_static_RAG",
+      "accuracy": 0,
+      "latency_ms": 97528.87678146362,
+      "memory_size_bytes": 0,
+      "abstentions": 0,
+      "false_claims": 0,
+      "oracle_exposed": false
+    },
+    {
+      "arm": "C_naive_copying",
+      "accuracy": 0,
+      "latency_ms": 128178.44080924988,
+      "tokens_used": 0,
+      "memory_size_bytes": 0,
+      "abstentions": 0,
+      "false_claims": 0,
+      "oracle_exposed": false
+    },
+    {
+      "arm": "D_gal_verified_only",
+      "accuracy": 0,
+      "latency_ms": 112366.7688369751,
+      "tokens_used": 0,
+      "memory_size_bytes": 0,
+      "abstentions": 0,
+      "false_claims": 0,
+      "oracle_exposed": false
+    },
+    {
+      "arm": "E_gal_adaptive_inheritance",
+      "accuracy": 0,
+      "latency_ms": 114840.23332595825,
+      "tokens_used": 0,
+      "memory_size_bytes": 0,
+      "abstentions": 0,
+      "false_claims": 0,
+      "oracle_exposed": false
+    }
+  ],
+  "comparison": {
+    "arm_order": [
+      "A_no_persistence",
+      "B_static_RAG",
+      "C_naive_copying",
+      "D_gal_verified_only",
+      "E_gal_all_memory_verified"
+    ],
+    "baseline": "A_no_persistence"
+  },
+  "resource_summary": {
+    "total_arms": 5,
+    "latency_ms": [
+      104414.65520858765,
+      97528.87678146362,
+      128178.44080924988,
+      112366.7688369751,
+      114840.23332595825
+    ],
+    "arms_by_accuracy": [
+      [
+        "A_no_persistence",
+        0
+      ],
+      [
+        "B_static_RAG",
+        0
+      ],
+      [
+        "C_naive_copying",
+        0
+      ],
+      [
+        "D_gal_verified_only",
+        0
+      ],
+      [
+        "E_gal_adaptive_inheritance",
+        0
+      ]
+    ]
+  },
+  "protocol_version": "1.0",
+  "generated": "2026-11-06T05:18:25.310715"
+}

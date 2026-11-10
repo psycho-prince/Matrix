@@ -1,0 +1,720 @@
+"""GAL × Qwen generational external-memory experiment.
+
+Tests external memory persistence across fresh Ollama requests.
+Does not fine-tune or modify model weights.
+"""
+
+import argparse
+import hashlib
+import json
+import random
+import uuid
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+
+from gal2.knowledge_lifecycle import FactKey, KnowledgeStore
+from gal_qwen.ollama_adapter import OllamaAdapter
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DATASET = ROOT / "datasets" / "world_v1.json"
+RESULTS = ROOT / "results"
+
+ARMS = (
+    "no_persistence",      # A: Baseline — no persistence
+    "flat_rag",            # B: Static RAG — ordinary retrieval
+    "naive_copy",          # C: Naive generational copying — inheritance without selection
+    "gal_verified_only",   # D: GAL verified-only inheritance
+    "gal_all_memory",      # E: GAL verification + adaptation
+)
+
+ANSWER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "answer": {"type": "string"}
+    },
+    "required": ["answer"],
+    "additionalProperties": False,
+}
+
+EXTRACTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "claims": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "subject": {"type": "string"},
+                    "relation": {"type": "string"},
+                    "object": {"type": "string"},
+                },
+                "required": ["subject", "relation", "object"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["claims"],
+    "additionalProperties": False,
+}
+
+
+def canonical(value):
+    return " ".join(
+        str(value).strip().lower().split()
+    ).rstrip(".!?")
+
+
+def make_key(subject, relation):
+    return FactKey(
+        str(subject),
+        str(relation),
+        "world",
+    )
+
+
+def oracle_from_dataset(dataset):
+    return {
+        make_key(fact["subject"], fact["relation"]):
+        str(fact["object"])
+        for fact in dataset["facts"]
+    }
+
+
+def make_observations(dataset, seed, noise_count):
+    """Create reproducible observations with controlled errors.
+
+    Returns observations, noise_log, acquisition_facts, and eval_facts.
+
+    Requirement 4: Separate acquisition, verification, and evaluation datasets.
+    Acquisition facts are shown to Qwen; eval facts are reserved never to be exposed.
+    """
+    all_facts = list(dataset["facts"])
+    rng = random.Random(seed)
+
+    # Shuffle and split
+    rng.shuffle(all_facts)
+
+    noise_count = min(noise_count, len(all_facts))
+    noise_indices = rng.sample(range(len(all_facts)), noise_count)
+
+    # Split: acquisition (what Qwen learns) vs evaluation (reserved)
+    # ACQUISITION_DATASET_RATIO: 80% for acquisition, 20% reserved
+    split_idx = int(len(all_facts) * 0.8)
+    acquisition_facts = all_facts[:split_idx]
+    eval_facts = all_facts[split_idx:]  # Reserved, never shown to Qwen
+
+    observations = [dict(fact) for fact in acquisition_facts]
+    noise_log = []
+
+    for index in noise_indices:
+        # Only corrupt facts in the acquisition set
+        if index < split_idx:
+            fact = observations[list(range(len(acquisition_facts))).index(index)]
+            original = str(fact["object"])
+            corrupted = (
+                "999"
+                if original.isdigit()
+                else "incorrect-" + original
+            )
+            fact["object"] = corrupted
+            noise_log.append({
+                "fact_id": fact["id"],
+                "original": original,
+                "corrupted": corrupted,
+                "arm": "acquisition",
+            })
+        else:
+            # Noise index is in eval set, just log it
+            noise_log.append({
+                "fact_id": all_facts[index]["id"],
+                "original": str(all_facts[index]["object"]),
+                "corrupted": str(all_facts[index]["object"]),
+                "arm": "eval_reserved",
+            })
+
+    return observations, noise_log, acquisition_facts, eval_facts
+
+
+def extract_claims(client, observations, seed, token_limit):
+    """Extract candidate claims from observations using Qwen."""
+    prompt = (
+        "Extract every factual observation below as a structured claim. "
+        "Preserve each observed value exactly, including incorrect values. "
+        "Do not correct, infer, or invent facts. "
+        "Return all observations in the required JSON schema.\n\n"
+        + json.dumps(observations, ensure_ascii=False)
+    )
+
+    result = client.generate_structured_with_metadata(
+        prompt=prompt,
+        schema=EXTRACTION_SCHEMA,
+        temperature=0.0,
+        num_predict=token_limit,
+        seed=seed,
+    )
+
+    if result.get("done") is not True:
+        raise RuntimeError(
+            f"Extraction did not complete: {result.get('done_reason')}"
+        )
+
+    if result.get("parse_error"):
+        print("\\n===== EXTRACTION DEBUG =====")
+        print("Parse error:", result.get("parse_error"))
+        print("Done:", result.get("done"))
+        print("Done reason:", result.get("done_reason"))
+        print("Prompt tokens:", result.get("prompt_eval_count"))
+        print("Output tokens:", result.get("eval_count"))
+        print("Raw content:")
+        print(result.get("raw_content", result.get("content", result)))
+        print("===== END DEBUG =====\\n")
+        raise RuntimeError("Extraction returned invalid JSON; raw response printed above.")
+
+    response = result.get("response")
+
+    if not isinstance(response, dict):
+        raise RuntimeError("Extraction response is not an object")
+
+    claims = response.get("claims")
+
+    if not isinstance(claims, list):
+        raise RuntimeError("Extraction response has no claims list")
+
+    return claims, result
+
+
+def create_store(agent_id, generation, claims):
+    """Create a KnowledgeStore from extracted claims."""
+    store = KnowledgeStore(agent_id, generation)
+
+    for index, item in enumerate(claims):
+        key = make_key(
+            item["subject"],
+            item["relation"],
+        )
+
+        store.acquire(
+            key,
+            str(item["object"]),
+            evidence_id=f"{agent_id}-claim-{index}",
+            confidence=1.0,
+        )
+
+    return store
+
+
+def verify_store(store, oracle):
+    """Verify claims independently against hidden ground truth."""
+    for claim in list(store.claims):
+        store.verify(claim, oracle)
+
+
+def verified_facts_from_store(store):
+    """Return only claims verified by the independent oracle."""
+    return [
+        {
+            "subject": claim.key.subject,
+            "relation": claim.key.relation,
+            "object": claim.value,
+        }
+        for claim in store.claims
+        if claim.verified
+    ]
+
+
+def build_question_prompt(question, facts, rules, arm):
+    fact_lines = [
+        f"{fact['subject']} | {fact['relation']} | {fact['object']}"
+        for fact in facts
+    ]
+
+    rule_lines = [
+        f"{rule['id']}: {rule['description']}"
+        for rule in rules
+    ]
+
+    fact_context = (
+        "\n".join(fact_lines)
+        if fact_lines
+        else "No world facts have been supplied."
+    )
+
+    rule_context = "\n".join(rule_lines)
+
+    return (
+        "Answer questions about this fictional experimental world. "
+        "Use only supplied facts and rules. Do not guess. "
+        "If information is insufficient, answer UNKNOWN. "
+        "Return only the requested JSON structure.\n\n"
+        f"EXPERIMENTAL ARM: {arm}\n\n"
+        f"WORLD FACTS:\n{fact_context}\n\n"
+        f"WORLD RULES:\n{rule_context}\n\n"
+        f"QUESTION: {question}"
+    )
+
+
+def resolve_context_answer(item, facts):
+    """Resolve an answer using only facts available to this arm."""
+
+    index = {
+        (f["subject"], f["relation"]): str(f["object"])
+        for f in facts
+    }
+
+    qid = item["question_id"]
+
+    if qid == "Q001":
+        return index.get(("Zorvium", "has_atomic_number"))
+
+    if qid in ("Q002", "Q003"):
+        entity = "Veltrax" if qid == "Q002" else "Nexora"
+        group = index.get((entity, "belongs_to"))
+
+        if group is None:
+            return None
+
+        return index.get((group, "has_property"))
+
+    if qid in ("Q004", "Q005"):
+        entity = "Veltrax" if qid == "Q004" else "Nexora"
+        sector = index.get((entity, "origin"))
+
+        if sector is None:
+            return None
+
+        return index.get((sector, "climate"))
+
+    return None
+
+
+def classify_result(result, expected):
+    if result.get("done_reason") == "length":
+        return "truncated", False, None
+
+    if result.get("done") is not True:
+        return "inference_error", False, None
+
+    if result.get("parse_error"):
+        return "invalid_json", False, None
+
+    response = result.get("response")
+
+    if not isinstance(response, dict):
+        return "invalid_json", False, None
+
+    answer = response.get("answer")
+
+    if not isinstance(answer, str) or not answer.strip():
+        return "invalid_json", False, None
+
+    predicted = canonical(answer)
+
+    # No supporting evidence: UNKNOWN is the correct response.
+    if expected is None:
+        if predicted == "unknown":
+            return "correct_abstention", True, predicted
+
+        return "unexpected_answer", False, predicted
+
+    # Evidence exists: compare against the answer derived from that evidence.
+    correct = predicted == canonical(expected)
+
+    return (
+        "correct" if correct else "incorrect",
+        correct,
+        predicted,
+    )
+
+
+def run_question(
+    client,
+    item,
+    facts,
+    rules,
+    arm,
+    seed,
+    num_predict,
+):
+    prompt = build_question_prompt(
+        item["question"],
+        facts,
+        rules,
+        arm,
+    )
+
+    prompt_hash = hashlib.sha256(
+        prompt.encode("utf-8")
+    ).hexdigest()
+
+    try:
+        result = client.generate_structured_with_metadata(
+            prompt=prompt,
+            schema=ANSWER_SCHEMA,
+            temperature=0.0,
+            num_predict=num_predict,
+            seed=seed,
+        )
+
+        context_expected = resolve_context_answer(item, facts)
+
+        status, correct, predicted = classify_result(
+            result,
+            context_expected,
+        )
+
+    except Exception as exc:
+        result = {"inference_exception": repr(exc)}
+        status = "inference_error"
+        correct = False
+        predicted = None
+
+    return {
+        "question_id": item["question_id"],
+        "question": item["question"],
+        "ground_truth_answer": item["answer"],
+        "context_supported_answer": context_expected,
+        "answerable_from_context": context_expected is not None,
+        "predicted_answer": predicted,
+        "status": status,
+        "correct_under_arm_protocol": correct,
+        "prompt_sha256": prompt_hash,
+        "context_fact_count": len(facts),
+        "inference": result,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="GAL × Qwen generational memory experiment"
+    )
+
+    parser.add_argument("--model", default="qwen3:4b")
+    parser.add_argument("--seed-start", type=int, default=7300)
+    parser.add_argument("--seeds", type=int, default=1)
+    parser.add_argument("--generations", type=int, default=2)
+    parser.add_argument("--num-predict", type=int, default=96)
+    parser.add_argument("--extraction-tokens", type=int, default=256)
+    parser.add_argument("--noise-count", type=int, default=2)
+
+    args = parser.parse_args()
+
+    if args.seeds < 1:
+        raise SystemExit("--seeds must be at least 1")
+
+    if args.generations < 2:
+        raise SystemExit("--generations must be at least 2")
+
+    if args.num_predict < 1 or args.extraction_tokens < 1:
+        raise SystemExit("Token limits must be positive")
+
+    dataset = json.loads(
+        DATASET.read_text(encoding="utf-8")
+    )
+
+    oracle = oracle_from_dataset(dataset)
+    client = OllamaAdapter(model=args.model)
+
+    model_info = next(
+        (
+            model for model in client.list_models()
+            if model.get("name") == args.model
+        ),
+        None,
+    )
+
+    if model_info is None:
+        raise SystemExit(f"Model not installed: {args.model}")
+
+    RESULTS.mkdir(parents=True, exist_ok=True)
+
+    run_id = str(uuid.uuid4())
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    raw_file = RESULTS / f"generational_memory_{run_id}.jsonl"
+    summary_file = RESULTS / f"generational_memory_{run_id}_summary.json"
+
+    counts = defaultdict(
+        lambda: defaultdict(
+            lambda: defaultdict(int)
+        )
+    )
+
+    noise_records = []
+    extraction_records = []
+
+    print("===== GAL × QWEN EXPERIMENT =====")
+    print(f"Run ID: {run_id}")
+    print(f"Model: {args.model}")
+    print(f"Model digest: {model_info.get('digest')}")
+    print(f"Dataset: {dataset['world_id']}")
+    print(f"Seeds: {args.seeds}")
+    print(f"Generations: {args.generations}")
+    print(f"Output: {raw_file}")
+    print()
+
+    with raw_file.open("x", encoding="utf-8") as output:
+
+        for seed in range(
+            args.seed_start,
+            args.seed_start + args.seeds,
+        ):
+            print(f"\n===== SEED {seed} =====")
+
+            observations, noise_log = make_observations(
+                dataset,
+                seed,
+                args.noise_count,
+            )
+
+            noise_records.append({
+                "seed": seed,
+                "corruptions": noise_log,
+            })
+
+            # All experimental arms receive identical observations.
+            # Observations are already structured records.
+            # Ingest them directly to isolate memory persistence
+            # from LLM extraction errors.
+            extracted = [
+                {
+                    "subject": str(item["subject"]),
+                    "relation": str(item["relation"]),
+                    "object": str(item["object"]),
+                }
+                for item in observations
+            ]
+
+            extraction_result = {
+                "method": "direct_structured_observation_ingestion",
+                "model_used": False,
+                "candidate_claims": len(extracted),
+                "preserved_corruptions": True,
+            }
+
+            extraction_records.append({
+                "seed": seed,
+                "candidate_claims": len(extracted),
+                "inference": extraction_result,
+            })
+
+            print(
+                f"Extracted candidate claims: {len(extracted)}"
+            )
+
+            stores = {}
+
+            for arm in (
+                "gal_verified_only",
+                "gal_all_memory_verified",
+            ):
+                store = create_store(
+                    f"{arm}-seed-{seed}-generation-0",
+                    0,
+                    extracted,
+                )
+
+                verify_store(store, oracle)
+                stores[arm] = store
+
+            # Flat RAG gets the same verified source claims,
+            # but does not use generational inheritance.
+            flat_store = create_store(
+                f"flat-rag-seed-{seed}",
+                0,
+                extracted,
+            )
+
+            verify_store(flat_store, oracle)
+
+            flat_facts = verified_facts_from_store(flat_store)
+
+            for generation in range(args.generations):
+                print(f"\n--- Generation {generation} ---")
+
+                for arm in ARMS:
+
+                    if arm == "no_persistence":
+                        facts = []
+
+                    elif arm == "flat_rag":
+                        facts = flat_facts
+
+                    else:
+                        facts = verified_facts_from_store(
+                            stores[arm]
+                        )
+
+                    for item in dataset["ground_truth"]:
+
+                        record = run_question(
+                            client=client,
+                            item=item,
+                            facts=facts,
+                            rules=dataset["rules"],
+                            arm=arm,
+                            seed=seed,
+                            num_predict=args.num_predict,
+                        )
+
+                        counts[arm][generation]["total"] += 1
+                        counts[arm][generation][record["status"]] += 1
+                        counts[arm][generation][
+                            "answerable" if record["answerable_from_context"]
+                            else "unanswerable"
+                        ] += 1
+
+                        record.update({
+                            "run_id": run_id,
+                            "timestamp_utc": timestamp,
+                            "seed": seed,
+                            "generation": generation,
+                            "arm": arm,
+                            "dataset_id": dataset["world_id"],
+                            "model_requested": args.model,
+                            "model_returned": record["inference"].get("model"),
+                            "model_digest": model_info.get("digest"),
+                            "temperature": 0.0,
+                            "seed_parameter": seed,
+                            "num_predict": args.num_predict,
+                        })
+
+                        output.write(
+                            json.dumps(record, ensure_ascii=False) + "\n"
+                        )
+                        output.flush()
+
+                        print(
+                            f"{arm:28} "
+                            f"{record['question_id']} "
+                            f"{record['predicted_answer']!r} "
+                            f"{record['status']}"
+                        )
+
+                # Inherit only after all arms complete this generation.
+                if generation < args.generations - 1:
+
+                    for arm, mode in (
+                        ("gal_verified_only", "verified_only"),
+                        ("gal_all_memory_verified", "all_memory"),
+                    ):
+                        parent = stores[arm]
+
+                        child = parent.inherit(
+                            child_id=(
+                                f"{arm}-seed-{seed}-generation-"
+                                f"{generation + 1}"
+                            ),
+                            child_generation=generation + 1,
+                            mode=mode,
+                        )
+
+                        # Independent verification at successor generation.
+                        verify_store(child, oracle)
+
+                        stores[arm] = child
+
+    # Generate aggregate report.
+    summary = {
+        "schema_version": 1,
+        "experiment": "gal_qwen_generational_external_memory",
+        "run_id": run_id,
+        "timestamp_utc": timestamp,
+        "model": args.model,
+        "model_digest": model_info.get("digest"),
+        "dataset_id": dataset["world_id"],
+        "design": {
+            "seed_start": args.seed_start,
+            "seeds": args.seeds,
+            "generations": args.generations,
+            "noise_count": args.noise_count,
+            "arms": list(ARMS),
+            "questions_per_generation": len(dataset["ground_truth"]),
+            "answer_tokens": args.num_predict,
+            "extraction_tokens": args.extraction_tokens,
+        },
+        "noise": noise_records,
+        "extraction": extraction_records,
+        "results": {},
+        "interpretation": (
+            "Engineering pilot only. This tests external-memory persistence "
+            "across fresh Qwen requests. It does not test fine-tuning, "
+            "weight updates, or persistent internal learning. "
+            "The five-question dataset is too small for statistical "
+            "conclusions. No-persistence abstention is not equivalent "
+            "to factual recall."
+        ),
+        "raw_results": str(raw_file),
+    }
+
+    for arm in ARMS:
+        summary["results"][arm] = {}
+
+        for generation in range(args.generations):
+            values = counts[arm][generation]
+            total = values["total"]
+
+            correct = values["correct"]
+            abstentions = values["correct_abstention"]
+            answerable = values["answerable"]
+            unanswerable = values["unanswerable"]
+
+            summary["results"][arm][str(generation)] = {
+                "total": total,
+                "answerable": answerable,
+                "unanswerable": unanswerable,
+                "correct": correct,
+                "incorrect": values["incorrect"],
+                "correct_abstention": abstentions,
+                "unexpected_answer": values["unexpected_answer"],
+                "truncated": values["truncated"],
+                "invalid_json": values["invalid_json"],
+                "inference_error": values["inference_error"],
+                "factual_accuracy": (
+                    correct / answerable if answerable else None
+                ),
+                "abstention_accuracy": (
+                    abstentions / unanswerable if unanswerable else None
+                ),
+            }
+
+    digest_input = json.dumps(
+        summary,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    summary["summary_sha256"] = hashlib.sha256(
+        digest_input
+    ).hexdigest()
+
+    summary_file.write_text(
+        json.dumps(summary, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    print("\n===== FINAL SUMMARY =====")
+
+    for arm in ARMS:
+        print(f"\n{arm}")
+
+        for generation in range(args.generations):
+            metrics = summary["results"][arm][str(generation)]
+
+            print(
+                f"Generation {generation}: "
+                f"correct={metrics['correct']}, "
+                f"incorrect={metrics['incorrect']}, "
+                f"abstentions={metrics['correct_abstention']}, "
+                f"errors={metrics['inference_error']}, "
+                f"factual_accuracy={metrics['factual_accuracy']}"
+            )
+
+    print(f"\nRaw results: {raw_file}")
+    print(f"Summary: {summary_file}")
+    print(summary["interpretation"])
+
+
+if __name__ == "__main__":
+    main()

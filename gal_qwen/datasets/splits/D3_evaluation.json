@@ -1,0 +1,82 @@
+{
+  "world_id": "gal-synthetic-world-v1-7300",
+  "description": "Fictional world",
+  "split": "D3",
+  "seed": 7300,
+  "facts": [
+    {
+      "id": "F018",
+      "subject": "Veltrax",
+      "relation": "origin",
+      "object": "Sector-3"
+    },
+    {
+      "id": "F016",
+      "subject": "Xylon",
+      "relation": "origin",
+      "object": "Sector-7"
+    },
+    {
+      "id": "F004",
+      "subject": "Krell",
+      "relation": "has_atomic_number",
+      "object": 49
+    },
+    {
+      "id": "F022",
+      "subject": "Sector-3",
+      "relation": "climate",
+      "object": "temperate"
+    },
+    {
+      "id": "F009",
+      "subject": "Krell",
+      "relation": "belongs_to",
+      "object": "Group-D"
+    },
+    {
+      "id": "F003",
+      "subject": "Veltrax",
+      "relation": "has_atomic_number",
+      "object": 3
+    }
+  ],
+  "rules": [
+    {
+      "id": "R001",
+      "description": "Group property inheritance",
+      "relation_chain": [
+        "belongs_to",
+        "has_property"
+      ]
+    },
+    {
+      "id": "R002",
+      "description": "Sector climate inheritance",
+      "relation_chain": [
+        "origin",
+        "climate"
+      ]
+    }
+  ],
+  "ground_truth": [
+    {
+      "question_id": "Q003",
+      "question": "What property does Krell have?",
+      "answer": "flexible"
+    },
+    {
+      "question_id": "Q004",
+      "question": "What climate does Xylon experience?",
+      "answer": "cold"
+    },
+    {
+      "question_id": "Q005",
+      "question": "What climate does Sector-7 experience?",
+      "answer": "cold"
+    }
+  ],
+  "n_facts": 6,
+  "n_questions": 3,
+  "evaluation_only": true
+}

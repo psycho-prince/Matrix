@@ -1,0 +1,165 @@
+{
+  "world_id": "gal-synthetic-world-v1-42",
+  "description": "Fictional world for GAL x Qwen experiment",
+  "facts": [
+    {
+      "id": "F001",
+      "subject": "Zorvium",
+      "relation": "has_atomic_number",
+      "object": 42
+    },
+    {
+      "id": "F002",
+      "subject": "Veltrax",
+      "relation": "belongs_to",
+      "object": "Group-A"
+    },
+    {
+      "id": "F003",
+      "subject": "Veltrax",
+      "relation": "has_property",
+      "object": "magnetic"
+    },
+    {
+      "id": "F004",
+      "subject": "Nexora",
+      "relation": "belongs_to",
+      "object": "Group-B"
+    },
+    {
+      "id": "F005",
+      "subject": "Nexora",
+      "relation": "has_property",
+      "object": "conductive"
+    },
+    {
+      "id": "F006",
+      "subject": "Krell",
+      "relation": "belongs_to",
+      "object": "Group-C"
+    },
+    {
+      "id": "F007",
+      "subject": "Krell",
+      "relation": "has_property",
+      "object": "insulating"
+    },
+    {
+      "id": "F008",
+      "subject": "Xylon",
+      "relation": "belongs_to",
+      "object": "Group-D"
+    },
+    {
+      "id": "F009",
+      "subject": "Xylon",
+      "relation": "has_property",
+      "object": "flexible"
+    },
+    {
+      "id": "F010",
+      "subject": "Aethos",
+      "relation": "belongs_to",
+      "object": "Group-E"
+    },
+    {
+      "id": "F011",
+      "subject": "Aethos",
+      "relation": "has_property",
+      "object": "transparent"
+    },
+    {
+      "id": "F012",
+      "subject": "Brax",
+      "relation": "belongs_to",
+      "object": "Group-F"
+    },
+    {
+      "id": "F013",
+      "subject": "Brax",
+      "relation": "has_property",
+      "object": "magnetic"
+    },
+    {
+      "id": "F014",
+      "subject": "Corvax",
+      "relation": "belongs_to",
+      "object": "Group-G"
+    },
+    {
+      "id": "F015",
+      "subject": "Corvax",
+      "relation": "has_property",
+      "object": "conductive"
+    },
+    {
+      "id": "F016",
+      "subject": "Drel",
+      "relation": "belongs_to",
+      "object": "Group-H"
+    },
+    {
+      "id": "F017",
+      "subject": "Drel",
+      "relation": "has_property",
+      "object": "insulating"
+    },
+    {
+      "id": "F018",
+      "subject": "Exov",
+      "relation": "belongs_to",
+      "object": "Group-I"
+    },
+    {
+      "id": "F019",
+      "subject": "Exov",
+      "relation": "has_property",
+      "object": "transparent"
+    },
+    {
+      "id": "F020",
+      "subject": "Zorvium",
+      "relation": "origin",
+      "object": "Sector-1"
+    },
+    {
+      "id": "F021",
+      "subject": "Sector-1",
+      "relation": "climate",
+      "object": "temperate"
+    },
+    {
+      "id": "F022",
+      "subject": "Veltrax",
+      "relation": "origin",
+      "object": "Sector-2"
+    }
+  ],
+  "questions": [
+    {
+      "question_id": "Q001",
+      "question": "What is the atomic number of Zorvium?",
+      "answer": "42"
+    },
+    {
+      "question_id": "Q002",
+      "question": "What property does Veltrax have?",
+      "answer": "magnetic"
+    },
+    {
+      "question_id": "Q003",
+      "question": "What property does Nexora have?",
+      "answer": "conductive"
+    },
+    {
+      "question_id": "Q004",
+      "question": "What climate does Zorvium experience?",
+      "answer": "temperate"
+    },
+    {
+      "question_id": "Q005",
+      "question": "What climate does Veltrax experience?",
+      "answer": "Sector-2 climate"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "world_id": "gal-synthetic-world-v1-7300",
+  "description": "Fictional world",
+  "split": "D1",
+  "seed": 7300,
+  "facts": [
+    {
+      "id": "F014",
+      "subject": "Krell",
+      "relation": "has_property",
+      "object": "flexible"
+    },
+    {
+      "id": "F024",
+      "subject": "Sector-4",
+      "relation": "climate",
+      "object": "frozen"
+    },
+    {
+      "id": "F002",
+      "subject": "Drel",
+      "relation": "has_atomic_number",
+      "object": 97
+    },
+    {
+      "id": "F008",
+      "subject": "Veltrax",
+      "relation": "belongs_to",
+      "object": "Group-C"
+    },
+    {
+      "id": "F023",
+      "subject": "Sector-2",
+      "relation": "climate",
+      "object": "hot"
+    },
+    {
+      "id": "F017",
+      "subject": "Drel",
+      "relation": "origin",
+      "object": "Sector-5"
+    },
+    {
+      "id": "F011",
+      "subject": "Xylon",
+      "relation": "has_property",
+      "object": "transparent"
+    },
+    {
+      "id": "F013",
+      "subject": "Veltrax",
+      "relation": "has_property",
+      "object": "conductive"
+    },
+    {
+      "id": "F015",
+      "subject": "Exov",
+      "relation": "has_property",
+      "object": "magnetic"
+    },
+    {
+      "id": "F005",
+      "subject": "Exov",
+      "relation": "has_atomic_number",
+      "object": 90
+    },
+    {
+      "id": "F020",
+      "subject": "Sector-7",
+      "relation": "climate",
+      "object": "cold"
+    },
+    {
+      "id": "F021",
+      "subject": "Sector-5",
+      "relation": "climate",
+      "object": "warm"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R001",
+      "description": "Group property inheritance",
+      "relation_chain": [
+        "belongs_to",
+        "has_property"
+      ]
+    },
+    {
+      "id": "R002",
+      "description": "Sector climate inheritance",
+      "relation_chain": [
+        "origin",
+        "climate"
+      ]
+    }
+  ],
+  "ground_truth": [],
+  "n_facts": 12,
+  "n_questions": 0
+}

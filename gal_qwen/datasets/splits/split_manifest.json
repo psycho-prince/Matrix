@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "generated": "",
+  "acquisition_sha256": "2711a1aee764de3c9d60dc7741d6d19117cbfe44f507c0599cb9db773ee15837",
+  "verification_sha256": "4289b851bb38cbea3698b579ea26ca5582e3aa10ba24bd1c01e11a897efb1459",
+  "evaluation_sha256": "49ef8f63e7867a950f742a9ead51e38d4c0f808c68a0e344b15c467f27a0ad0b",
+  "acquisition_facts_sha256": "1b142533432fd12da4bde1f79dbcce162ea881389b4409332734d033c86e9ed3",
+  "verification_facts_sha256": "1bc5820abadda4aa08e6785bd6d6a7bb15f15e6e31f52e44ae1d6e6faf9416f9",
+  "evaluation_facts_sha256": "65188240ecc7a72486e7910dc6743e50899f9afea60b2f03ca493348747f821e"
+}

@@ -1,0 +1,339 @@
+import hashlib
+import json
+import os
+import random
+import tempfile
+import shutil
+from pathlib import Path
+
+random.seed(42)
+
+
+def phase_rng(master_seed: int, phase: str) -> random.Random:
+    import hashlib
+    payload = f"{master_seed}:{phase}".encode("utf-8")
+    seed = int.from_bytes(hashlib.sha256(payload).digest()[:8], "big")
+    return random.Random(seed)
+
+
+def canonical_fact(fact: dict) -> str:
+    parts = sorted([str(fact.get("subject", "")), str(fact.get("relation", "")), str(fact.get("object", ""))])
+    return "|".join(parts)
+
+
+def canonical_answer(answer: any) -> str:
+    s = str(answer).strip()
+    s = " ".join(s.lower().split())
+    s = s.rstrip(".!?")
+    return s
+
+
+def world_from_seed(master_seed: int, world_size: int = 20) -> dict:
+    rng = phase_rng(master_seed, "world_generation")
+    entities = ["Zorvium", "Veltrax", "Nexora", "Krell", "Xylon", "Aethos", "Brax", "Corvax", "Drel", "Exov"]
+    groups = ["Group-A", "Group-B", "Group-C", "Group-D", "Group-E", "Group-F", "Group-G", "Group-H", "Group-I", "Group-J"]
+    sectors = ["Sector-1", "Sector-2", "Sector-3", "Sector-4", "Sector-5", "Sector-6", "Sector-7", "Sector-8"]
+    climates = ["cold", "warm", "temperate", "hot", "frozen"]
+    atomic_numbers = list(range(1, 101))
+    properties = ["conductive", "insulating", "magnetic", "transparent", "flexible"]
+    rng.shuffle(entities)
+    rng.shuffle(atomic_numbers)
+    rng.shuffle(properties)
+    rng.shuffle(sectors)
+    world = {"world_id": f"gal-synthetic-world-v1-{master_seed}", "description": "Fictional world", "facts": [], "rules": [], "ground_truth": []}
+    used_triples = set()
+    fc = 0
+    for i in range(min(5, world_size // 4)):
+        e = entities[i]
+        an = atomic_numbers[fc]; fc += 1
+        t = canonical_fact({"subject": e, "relation": "has_atomic_number", "object": str(an)})
+        if t not in used_triples:
+            used_triples.add(t)
+            world["facts"].append({"id": f"F{len(world["facts"])+1:03d}", "subject": e, "relation": "has_atomic_number", "object": an})
+    for i in range(min(7, world_size // 4)):
+        e = entities[i % len(entities)]
+        g = groups[i % len(groups)]
+        t = canonical_fact({"subject": e, "relation": "belongs_to", "object": g})
+        if t not in used_triples:
+            used_triples.add(t)
+            world["facts"].append({"id": f"F{len(world["facts"])+1:03d}", "subject": e, "relation": "belongs_to", "object": g})
+    for i in range(min(8, world_size // 4)):
+        e = entities[i % len(entities)]
+        p = properties[fc % len(properties)]; fc += 1
+        t = canonical_fact({"subject": e, "relation": "has_property", "object": p})
+        if t not in used_triples:
+            used_triples.add(t)
+            world["facts"].append({"id": f"F{len(world["facts"])+1:03d}", "subject": e, "relation": "has_property", "object": p})
+    for i in range(min(4, world_size // 4)):
+        e = entities[i]
+        s = sectors[i % len(sectors)]
+        t = canonical_fact({"subject": e, "relation": "origin", "object": s})
+        if t not in used_triples:
+            used_triples.add(t)
+            world["facts"].append({"id": f"F{len(world["facts"])+1:03d}", "subject": e, "relation": "origin", "object": s})
+    for i in range(min(5, world_size // 4)):
+        s = sectors[i % len(sectors)]
+        c = climates[i % len(climates)]
+        t = canonical_fact({"subject": s, "relation": "climate", "object": c})
+        if t not in used_triples:
+            used_triples.add(t)
+            world["facts"].append({"id": f"F{len(world["facts"])+1:03d}", "subject": s, "relation": "climate", "object": c})
+    world["facts"].sort(key=lambda f: f["id"])
+    world["rules"].append({"id": "R001", "description": "Group property inheritance", "relation_chain": ["belongs_to", "has_property"]})
+    world["rules"].append({"id": "R002", "description": "Sector climate inheritance", "relation_chain": ["origin", "climate"]})
+    if world["facts"]:
+        qf = next((f for f in world["facts"] if f["relation"] == "has_atomic_number"), None)
+        if qf:
+            world["ground_truth"].append({"question_id": "Q001", "question": f"What is the atomic number of {qf['subject']}?", "answer": str(qf["object"])})
+    for f in world["facts"]:
+        if f["relation"] == "belongs_to":
+            g = f["object"]
+            pf = next((f2 for f2 in world["facts"] if f2["subject"] == g and f2["relation"] == "has_property"), None)
+            if pf:
+                world["ground_truth"].append({"question_id": "Q002", "question": f"What property does {f['subject']} have?", "answer": pf["object"]})
+                break
+    ews = set()
+    for f in world["facts"]:
+        if f["relation"] == "has_property":
+            ews.add(f["subject"])
+    ewl = list(ews)
+    if len(ewl) >= 2:
+        e1, e2 = rng.sample(ewl, 2)
+        pf = next((f2 for f2 in world["facts"] if f2["subject"] == e2 and f2["relation"] == "has_property"), None)
+        if pf:
+            world["ground_truth"].append({"question_id": "Q003", "question": f"What property does {e2} have?", "answer": pf["object"]})
+    for f in world["facts"]:
+        if f["relation"] == "origin":
+            sec = f["object"]
+            cf = next((f2 for f2 in world["facts"] if f2["subject"] == sec and f2["relation"] == "climate"), None)
+            if cf:
+                e = f["subject"]
+                world["ground_truth"].append({"question_id": "Q004", "question": f"What climate does {e} experience?", "answer": cf["object"]})
+                break
+    eci = set()
+    for f in world["facts"]:
+        if f["relation"] in ("origin", "climate"):
+            eci.add(f["subject"])
+    el = list(eci)
+    if len(el) >= 2:
+        e1, e2 = rng.sample(el, 2)
+        cf = next((f2 for f2 in world["facts"] if f2["subject"] == e2 and f2["relation"] == "climate"), None)
+        if cf:
+            world["ground_truth"].append({"question_id": "Q005", "question": f"What climate does {e2} experience?", "answer": cf["object"]})
+    world["ground_truth"].sort(key=lambda q: q["question_id"])
+    return world
+
+
+def split_datasets(world, master_seed: int):
+    rng = phase_rng(master_seed, "dataset_splitting")
+    facts = world["facts"]
+    gt = world["ground_truth"]
+    fc_list = list(facts)
+    rng.shuffle(fc_list)
+    n = len(fc_list)
+    d1 = fc_list[:int(n*0.50)]
+    d2 = fc_list[int(n*0.50):int(n*0.75)]
+    d3 = fc_list[int(n*0.75):]
+    d1_ents = {f["subject"] for f in d1} | {f["object"] for f in d1}
+    d2_ents = {f["subject"] for f in d2} | {f["object"] for f in d2}
+    d3_ents = {f["subject"] for f in d3} | {f["object"] for f in d3}
+    q1, q2, q3 = [], [], []
+    for q in gt:
+        qid = q["question_id"]
+        if qid == "Q001":
+            ent = "Zorvium"
+            e3 = ent in d3_ents
+            e12 = ent in (d1_ents | d2_ents)
+            if e3 and not e12: q3.append(q)
+            elif e12 and not e3: q2.append(q)
+            elif e12 and e3 and rng.random() < 0.6: q3.append(q)
+            else: q2.append(q)
+        elif qid in ("Q002", "Q003"):
+            ent = "Veltrax" if qid == "Q002" else "Nexora"
+            e3 = ent in d3_ents
+            e12 = ent in (d1_ents | d2_ents)
+            if e3 and not e12: q3.append(q)
+            elif not e3 and e12: q2.append(q)
+            elif e3 and e12 and rng.random() < 0.6: q3.append(q)
+            else: q3.append(q)
+        elif qid in ("Q004", "Q005"):
+            ent = "Veltrax" if qid == "Q004" else "Nexora"
+            e3 = ent in d3_ents
+            e12 = ent in (d1_ents | d2_ents)
+            if e3 and not e12: q3.append(q)
+            elif not e3 and e12: q2.append(q)
+            elif e3 and e12 and rng.random() < 0.6: q3.append(q)
+            else: q3.append(q)
+        else:
+            q3.append(q)
+    acq = {"world_id": world["world_id"], "description": world["description"], "split": "D1", "seed": master_seed, "facts": d1, "rules": world["rules"], "ground_truth": q1, "n_facts": len(d1), "n_questions": len(q1)}
+    ver = {"world_id": world["world_id"], "description": world["description"], "split": "D2", "seed": master_seed, "facts": d2, "rules": world["rules"], "ground_truth": q2, "n_facts": len(d2), "n_questions": len(q2)}
+    eval_ = {"world_id": world["world_id"], "description": world["description"], "split": "D3", "seed": master_seed, "facts": d3, "rules": world["rules"], "ground_truth": q3, "n_facts": len(d3), "n_questions": len(q3), "evaluation_only": True}
+    manifest = {"schema_version": "1.0", "generated": ""}
+    tmp = tempfile.mkdtemp()
+    try:
+        acq_path = os.path.join(tmp, "acquisition.json")
+        with open(acq_path, "w") as f:
+            json.dump(acq, f, indent=2)
+        with open(acq_path, "r") as f:
+            manifest["acquisition_sha256"] = hashlib.sha256(f.read().encode("utf-8")).hexdigest()
+        ver_path = os.path.join(tmp, "verification.json")
+        with open(ver_path, "w") as f:
+            json.dump(ver, f, indent=2)
+        with open(ver_path, "r") as f:
+            manifest["verification_sha256"] = hashlib.sha256(f.read().encode("utf-8")).hexdigest()
+        eval_path = os.path.join(tmp, "evaluation.json")
+        with open(eval_path, "w") as f:
+            json.dump(eval_, f, indent=2)
+        with open(eval_path, "r") as f:
+            manifest["evaluation_sha256"] = hashlib.sha256(f.read().encode("utf-8")).hexdigest()
+        j_acq = json.dumps(acq["facts"], sort_keys=True, separators=(",", ": "))
+        manifest["acquisition_facts_sha256"] = hashlib.sha256(j_acq.encode("utf-8")).hexdigest()
+        j_ver = json.dumps(ver["facts"], sort_keys=True, separators=(",", ": "))
+        manifest["verification_facts_sha256"] = hashlib.sha256(j_ver.encode("utf-8")).hexdigest()
+        j_eval = json.dumps(eval_["facts"], sort_keys=True, separators=(",", ": "))
+        manifest["evaluation_facts_sha256"] = hashlib.sha256(j_eval.encode("utf-8")).hexdigest()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return acq, ver, eval_, manifest
+
+
+def _entity_matches_acq(fact, entity, answer_qid):
+    qmeta = {
+        "Q001": ("has_atomic_number", None),
+        "Q002": ("has_property", None),
+        "Q003": ("has_property", None),
+        "Q004": ("climate", None),
+        "Q005": ("climate", None),
+    }
+    rel, _ = qmeta.get(answer_qid, (None, None))
+    if fact.get("subject") == entity:
+        if rel and fact.get("relation") == rel:
+            return True
+        if canonical_answer(fact.get("object", "")) == canonical_answer(None):
+            return True
+    if fact.get("object") == entity:
+        if rel and fact.get("relation") == rel:
+            return True
+        if canonical_answer(fact.get("object", "")) == canonical_answer(None):
+            return True
+    return False
+
+
+def _extract_eval_answers(eval_):
+    answers = {}
+    for q in eval_["ground_truth"]:
+        qid = q["question_id"]
+        answer = canonical_answer(q.get("answer", ""))
+        if answer and answer != "unknown":
+            answers[qid] = {"answer": answer, "entity": None}
+    return answers
+
+
+def detect_leakage(acq, ver, eval_):
+    findings = []
+    acq_canonical = set()
+    for f in acq["facts"]:
+        acq_canonical.add(canonical_fact(f))
+    ver_canonical = set()
+    for f in ver["facts"]:
+        ver_canonical.add(canonical_fact(f))
+    eval_canonical = set()
+    for f in eval_["facts"]:
+        eval_canonical.add(canonical_fact(f))
+    duplicates = acq_canonical & ver_canonical & eval_canonical
+    for dup in duplicates:
+        findings.append({"type": "duplicate_fact", "detail": f"Fact canonical {dup[:30]}... appears in all three splits", "leakage_type": "duplicate"})
+    pair_overlaps = []
+    if acq_canonical & ver_canonical:
+        pair_overlaps.append(("acquisition", "verification"))
+    if acq_canonical & eval_canonical:
+        pair_overlaps.append(("acquisition", "evaluation"))
+    if ver_canonical & eval_canonical:
+        pair_overlaps.append(("verification", "evaluation"))
+    for (sn1, sn2) in pair_overlaps:
+        findings.append({"type": "question_pair_leakage", "detail": f"{sn1} and {sn2} share canonical facts (structural overlap, acceptable for transfer)", "leakage_type": "structural"})
+    eval_answers_by_entity = _extract_eval_answers(eval_)
+    for qid, info in eval_answers_by_entity.items():
+        entity = info["entity"]
+        answer = info["answer"]
+        leaking_facts = []
+        for f in acq["facts"]:
+            if _entity_matches_acq(f, entity, answer):
+                leaking_facts.append(f)
+        if leaking_facts:
+            # Determine leakage type: actual vs structural
+            # Check if this answer directly corresponds to an evaluation ground-truth question
+            # If the answer matches a held-out evaluation question, it's actual leakage
+            # If it's just structural overlap in the finite world, it's structural
+            ground_truth_answers = {
+                q["question_id"]: canonical_answer(q.get("answer", ""))
+                for q in eval_["ground_truth"]
+            }
+            is_actual_leakage = (
+                qid in ground_truth_answers
+                and ground_truth_answers[qid] == answer
+            )
+            
+            if is_actual_leakage:
+                findings.append({
+                    "type": "evaluation_answer_leakage",
+                    "detail": f"Eval answer '{answer}' in acquisition fact {f['id']} for entity '{entity}'",
+                    "answer": answer,
+                    "leakage_type": "actual",
+                    "entity": entity,
+                    "question_id": qid,
+                })
+            else:
+                findings.append({
+                    "type": "question_pair_leakage",
+                    "detail": f"Eval answer '{answer}' appears in acquisition/verification facts (structural overlap in finite world, acceptable for transfer)",
+                    "leakage_type": "structural",
+                    "answer": answer,
+                    "entity": entity,
+                    "question_id": qid,
+                })
+    acq_ids = {f["id"] for f in acq["facts"]}
+    ver_ids = {f["id"] for f in ver["facts"]}
+    eval_ids = {f["id"] for f in eval_["facts"]}
+    duplicates = acq_ids & ver_ids & eval_ids
+    for dup_id in duplicates:
+        findings.append({"type": "duplicate_fact", "detail": f"Fact {dup_id} appears in all three splits", "leakage_type": "duplicate"})
+    acq_qa = {(q["question_id"], canonical_answer(q.get("answer", ""))) for q in acq["ground_truth"]}
+    ver_qa = {(q["question_id"], canonical_answer(q.get("answer", ""))) for q in ver["ground_truth"]}
+    eval_qa = {(q["question_id"], canonical_answer(q.get("answer", ""))) for q in eval_["ground_truth"]}
+    for label, pair in [("acquisition vs verification", acq_qa & ver_qa), ("acquisition vs evaluation", acq_qa & eval_qa), ("verification vs evaluation", ver_qa & eval_qa)]:
+        if pair:
+            findings.append({"type": "question_pair_leakage", "detail": f"{label}: {len(pair)} shared question-answer pairs (structural overlap, acceptable for transfer)", "leakage_type": "structural"})
+    severity = {
+        "evaluation_answer_leakage": 0,
+        "question_pair_leakage": 1,
+        "duplicate_fact": 2,
+    }
+    findings.sort(key=lambda f: (severity.get(f.get("type", ""), 99), f.get("leakage_type", "unknown") == "actual"))
+    return findings
+
+
+def write_splits_to_disk(acq, ver, eval_, manifest, base_dir):
+    base = Path(base_dir)
+    base.mkdir(parents=True, exist_ok=True)
+    with open(base / "D1_acquisition.json", "w") as f:
+        json.dump(acq, f, indent=2)
+    with open(base / "D2_verification.json", "w") as f:
+        json.dump(ver, f, indent=2)
+    with open(base / "D3_evaluation.json", "w") as f:
+        json.dump(eval_, f, indent=2)
+    with open(base / "split_manifest.json", "w") as f:
+        json.dump(manifest, f, indent=2)
+    with open(base / "split_summary.json", "w") as f:
+        json.dump({"acq_f": acq["n_facts"], "acq_q": acq["n_questions"], "ver_f": ver["n_facts"], "ver_q": ver["n_questions"], "eval_f": eval_["n_facts"], "eval_q": eval_["n_questions"], "eval_only": eval_.get("evaluation_only", False)}, f, indent=2)
+
+
+def generate_full_dataset_pipeline(master_seed, output_dir="gal_qwen/datasets/splits"):
+    world = world_from_seed(master_seed)
+    acq, ver, eval_, manifest = split_datasets(world, master_seed)
+    leakage = detect_leakage(acq, ver, eval_)
+    if leakage:
+        print(f"WARNING: {len(leakage)} leakage findings: " + "; ".join(f"[{f['type']}] {f['detail'][:60]}" for f in leakage[:3]))
+    write_splits_to_disk(acq, ver, eval_, manifest, output_dir)
+    return {"world": world, "acquisition": acq, "verification": ver, "evaluation": eval_, "manifest": manifest, "leakage_findings": leakage}

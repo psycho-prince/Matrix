@@ -1,0 +1,71 @@
+{
+  "world_id": "gal-synthetic-world-v1-7300",
+  "description": "Fictional world",
+  "split": "D2",
+  "seed": 7300,
+  "facts": [
+    {
+      "id": "F006",
+      "subject": "Xylon",
+      "relation": "belongs_to",
+      "object": "Group-A"
+    },
+    {
+      "id": "F010",
+      "subject": "Exov",
+      "relation": "belongs_to",
+      "object": "Group-E"
+    },
+    {
+      "id": "F001",
+      "subject": "Xylon",
+      "relation": "has_atomic_number",
+      "object": 74
+    },
+    {
+      "id": "F019",
+      "subject": "Krell",
+      "relation": "origin",
+      "object": "Sector-2"
+    },
+    {
+      "id": "F007",
+      "subject": "Drel",
+      "relation": "belongs_to",
+      "object": "Group-B"
+    },
+    {
+      "id": "F012",
+      "subject": "Drel",
+      "relation": "has_property",
+      "object": "insulating"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R001",
+      "description": "Group property inheritance",
+      "relation_chain": [
+        "belongs_to",
+        "has_property"
+      ]
+    },
+    {
+      "id": "R002",
+      "description": "Sector climate inheritance",
+      "relation_chain": [
+        "origin",
+        "climate"
+      ]
+    }
+  ],
+  "ground_truth": [
+    {
+      "question_id": "Q001",
+      "question": "What is the atomic number of Xylon?",
+      "answer": "74"
+    }
+  ],
+  "n_facts": 6,
+  "n_questions": 1
+}
