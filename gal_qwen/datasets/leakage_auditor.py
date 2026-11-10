@@ -43,9 +43,11 @@ def detect_leakage(acquisition: Dict[str, Any], verification: Dict[str, Any],
         # Only a fact matching the target entity/group AND the answer property
         # is direct answer disclosure. Generic word overlap is deliberately ignored.
         answer = re.sub(r"\s+", " ", str(task["answer"]).strip().casefold())
+        permitted_path_ids = set(path_ids)
         direct_matches = [
             fact for fact in training
-            if re.sub(r"\s+", " ", str(fact.get("property", "")).strip().casefold()) == answer
+            if fact["fact_id"] not in permitted_path_ids
+            and re.sub(r"\\s+", " ", str(fact.get("property", "")).strip().casefold()) == answer
             and (fact.get("entity_id") == task.get("target_entity_id")
                  or fact.get("group_id") == task.get("target_group_id"))
         ]
