@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from .memory import MemoryStore
-from .models import MemoryKind, MemoryRecord
+from .models import Capability, MemoryKind, MemoryRecord
 
 ARMS = (
     "no_transfer",
@@ -118,24 +118,23 @@ def inherit_arm(parent: MemoryStore, arm: str, child_id: str, generation: int) -
     child.inherit_verified(tuple(selected), child_id, generation)
 
     if arm == "corrupted_memory":
-        # Deliberately simulate an undetected corruption after transfer:
-        # the altered record remains marked verified. This is an adversarial
-        # stress control, not a claim that the normal transfer path corrupts it.
-        semantic = list(child.get(MemoryKind.SEMANTIC))
-        if semantic:
-            record = semantic[0]
-            changed = dict(record.content)
-            rules = dict(changed["rulebook"])
-            first_symbol = sorted(rules)[0]
-            original = dict(rules[first_symbol])
-            original["amount"] = int(original["amount"]) + 1
-            rules[first_symbol] = original
-            changed["rulebook"] = rules
-            records = list(child.get(MemoryKind.SEMANTIC))
-            child._records[MemoryKind.SEMANTIC] = [
-                replace(item, content=changed) if item is record else item
-                for item in records
-            ]
+        # Rebuild an isolated child store with one deliberately altered
+        # semantic record. The record retains verified=True to model a
+        # verification-system failure without mutating MemoryStore internals.
+        corrupted = MemoryStore()
+        for kind in MemoryKind:
+            for record in child.get(kind):
+                if kind == MemoryKind.SEMANTIC:
+                    changed = dict(record.content)
+                    rules = dict(changed["rulebook"])
+                    first_symbol = sorted(rules)[0]
+                    altered_rule = dict(rules[first_symbol])
+                    altered_rule["amount"] = int(altered_rule["amount"]) + 1
+                    rules[first_symbol] = altered_rule
+                    changed["rulebook"] = rules
+                    record = replace(record, content=changed)
+                corrupted.add(record)
+        child = corrupted
     return child
 
 
@@ -171,6 +170,19 @@ def run(seed_start: int = 91000, seeds: int = 100, tasks_per_seed: int = 30) -> 
 
         for arm in ARMS:
             child = inherit_arm(parent, arm, f"child-{seed}-{arm}", 1)
+            # Capability metadata is a distinct GAL model object, not a
+            # MemoryRecord. This arm deliberately receives a verified skill
+            # claim but no symbol-to-operation semantics.
+            capability_metadata = (
+                Capability(
+                    name="symbolic_rule_application",
+                    proficiency=1.0,
+                    confidence=1.0,
+                    verified=True,
+                )
+                if arm == "capability_only"
+                else None
+            )
             correct = 0
             abstentions = 0
             incorrect = 0
@@ -210,6 +222,16 @@ def run(seed_start: int = 91000, seeds: int = 100, tasks_per_seed: int = 30) -> 
                 "accuracy": accuracy,
                 "abstention_rate": abstention_rate,
                 "memory_counts": child.counts(),
+                "capability_metadata": (
+                    {
+                        "name": capability_metadata.name,
+                        "proficiency": capability_metadata.proficiency,
+                        "confidence": capability_metadata.confidence,
+                        "verified": capability_metadata.verified,
+                    }
+                    if capability_metadata is not None
+                    else None
+                ),
                 "semantic_records_retrieved": len(child.search(
                     MemoryKind.SEMANTIC, "symbolic-rulebook")),
                 "procedural_records_retrieved": len(child.search(
