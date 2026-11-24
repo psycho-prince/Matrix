@@ -46,7 +46,7 @@ The potential differentiator is not forgetting alone. It is the joint treatment 
 3. Kirby, Griffiths & Smith (2014), *Iterated learning and the evolution of language*: https://doi.org/10.1016/j.conb.2014.07.014
 4. *Cultural transmission in an ever-changing world: trial-and-error copying may be more robust than precise imitation* (2018): https://pmc.ncbi.nlm.nih.gov/articles/PMC5812963/
 5. *The experimental evolution of human culture: flexibility, fidelity and environmental instability* (2022): https://pmc.ncbi.nlm.nih.gov/articles/PMC9627710/
-6. Nassar et al., *BAM: Bayes with Adaptive Memory* (2022 preprint): https://arxiv.org/abs/2202.02405
+6. Nassar et al., *BAM: Bayes with Adaptive Memory* (ICLR 2022): https://mlanthology.org/iclr/2022/nassar2022iclr-bam/ (preprint version: https://arxiv.org/abs/2202.02405)
 7. *Learning and forgetting using reinforced Bayesian change detection* (2019): https://pmc.ncbi.nlm.nih.gov/articles/PMC6488101/
 8. Kirkpatrick et al. (2017), *Overcoming catastrophic forgetting in neural networks* (EWC): https://doi.org/10.1073/PNAS.1611835114
 9. Rolnick et al. (2019), *Experience Replay for Continual Learning*: https://proceedings.neurips.cc/paper/2019/hash/fa7cdfad1a5aaf8370ebeda47a1ff1c3-Abstract.html
@@ -54,7 +54,7 @@ The potential differentiator is not forgetting alone. It is the joint treatment 
 11. *Cultural evolution: A review of theoretical challenges* (2024): https://pmc.ncbi.nlm.nih.gov/articles/PMC10955367/
 12. *Evolving Machine Learning in Non-Stationary Environments: A Unified Survey of Drift, Forgetting, and Adaptation* (2026): https://doi.org/10.1080/08839514.2026.2707047
 
-The 2026 survey is recent and useful for taxonomy, but a survey is not a substitute for comparing primary algorithms and their assumptions. The BAM work is a preprint, not evidence of peer-reviewed publication.
+The 2026 survey is recent and useful for taxonomy, but a survey is not a substitute for comparing primary algorithms and their assumptions. **Correction incorporated during PR review:** BAM is a peer-reviewed ICLR 2022 conference paper; the arXiv URL above is its preprint version, not its publication status.
 
 ---
 
