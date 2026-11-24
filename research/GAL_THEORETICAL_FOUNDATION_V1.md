@@ -58,9 +58,9 @@ A shared vocabulary is useful for theory comparison; it does not make the implem
 
 For generation (g), use the comparison tuple
 
-[
+$
 \mathcal{G}_g=(\mathcal{A}_g,\mathcal{E}_g,\mathcal{T}_g,\mathcal{K}_g,\mathcal{I}_g,\mathcal{C}_g),
-]
+$
 
 where:
 - (\mathcal{A}_g): agents or learning entities;
@@ -72,9 +72,9 @@ where:
 
 An abstract successor transition can be written as
 
-[
+$
 X_{g+1}=\Phi(X_g,O_{g+1},U_{g+1};\eta),
-]
+$
 
 where (X_g) is the programme-specific state, (O_{g+1}) is new observation or experience, (U_{g+1}) is inherited input, and (\eta) collects fixed design choices.
 
@@ -84,33 +84,33 @@ This is a bookkeeping formalism, not a claim that every current implementation e
 
 For a fixed evaluation distribution (Q_g), decision rule (f), and bounded loss (\ell\in[0,1]), define
 
-[
+$
 R_{Q_g}(f)=\mathbb{E}_{z\sim Q_g}[\ell(f,z)].
-]
+$
 
 For a higher-is-better score, define utility (V_{Q_g}(f)=-R_{Q_g}(f)).
 
 For a transfer intervention (a) and a matched no-transfer condition (0), define the paired effect
 
-[
+$
 \Delta_g(a)=\mathbb{E}_s[V_g(a,s)-V_g(0,s)],
-]
+$
 
 where (s) indexes independent paired runs or matched initial conditions. The experimental unit must be declared; agents sharing a population and environment are not automatically independent replicates.
 
 If resource costs are measured, report them separately. A composite objective may be defined as
 
-[
+$
 J_g(a)=V_g(a)-\lambda C_g(a),
-]
+$
 
 but (C_g) must be operationally measured and (\lambda) specified before outcomes are inspected. Do not call a chosen numerical fitness penalty a measured metabolic or physical energy cost.
 
 For a source distribution (P) and successor distribution (Q), on a finite state space,
 
-[
+$
 d_{TV}(P,Q)=\frac12\sum_x|P(x)-Q(x)|.
-]
+$
 
 Always report actual successor-distribution performance as well as any theoretical shift bound.
 
@@ -136,11 +136,11 @@ GAL 2.0's provenance and lineage fields provide useful implementation scaffoldin
 
 For a finite hypothesis space (\Theta), prior distribution (\pi), and observation (y) with a specified likelihood (L(y\mid\theta)), Bayesian updating is
 
-[
+$
 \pi'(	heta)=
 \frac{L(y\mid\theta)\pi(\theta)}
 {\sum_{\vartheta\in\Theta}L(y\mid\vartheta)\pi(\vartheta)}.
-]
+$
 
 This is an established mathematical rule under the assumed prior and likelihood. It does not show that an agent can correctly specify its hypothesis space or likelihood model. Multiplication of likelihoods is justified for conditionally independent observations; duplicated or correlated evidence requires a joint likelihood or dependence model.
 
@@ -148,9 +148,9 @@ This is an established mathematical rule under the assumed prior and likelihood.
 
 The existing analytical document proposes
 
-[
+$
 \pi_c=(1-r)\pi_0+r\pi_p,\qquad r\in[0,1],
-]
+$
 
 where (\pi_0) is a successor base prior and (\pi_p) is a parent distribution. This is a normalized convex mixture. It is a modelling choice, not Bayesian updating in general and not a biological inheritance law. The current GAL 2.0 implementation does not implement this analytical Bayesian model.
 
@@ -158,16 +158,16 @@ where (\pi_0) is a successor base prior and (\pi_p) is a parent distribution. Th
 
 For claim (H), prior probability (p), and Bayes factor (B), posterior odds are
 
-[
+$
 \frac{P(H\mid y)}{P(\neg H\mid y)}
 =B\frac{p}{1-p}.
-]
+$
 
 To require posterior probability at least (\tau\), the evidence must satisfy
 
-[
+$
 B\geq\frac{\tau}{1-\tau}\frac{1-p}{p}.
-]
+$
 
 This is an algebraic consequence of Bayes' rule. It only has an empirical interpretation if the likelihood ratio is valid and the evidence dependence is handled correctly.
 
@@ -175,21 +175,21 @@ This is an algebraic consequence of Bayes' rule. It only has an empirical interp
 
 For bounded loss and a fixed decision rule,
 
-[
+$
 |R_P(f)-R_Q(f)|\leq d_{TV}(P,Q).
-]
+$
 
 If an inherited rule (f_I) has source-domain risk advantage (G\geq0) over baseline (f_B),
 
-[
+$
 R_P(f_B)-R_P(f_I)=G,
-]
+$
 
 then
 
-[
+$
 R_Q(f_B)-R_Q(f_I)\geq G-2d_{TV}(P,Q).
-]
+$
 
 This is a sufficient bound. It does not establish that (G>0), that the bound is tight, or that inheritance remains useful after every shift.
 
